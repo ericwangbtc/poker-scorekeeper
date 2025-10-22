@@ -73,7 +73,7 @@ const computeInitialPlayer = (config: RoomConfig, name: string): Player => {
     id: generatePlayerId(),
     name,
     hands,
-    currentChips: buyIn,
+    currentChips: 0,
     buyInChips: buyIn,
     order: now(),
     buyInOverride: false
