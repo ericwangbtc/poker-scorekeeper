@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CreateRoomConfirmDialog from "../components/CreateRoomConfirmDialog";
 import DisplayModeToggle from "../components/DisplayModeToggle";
 import DeletePlayerDialog from "../components/DeletePlayerDialog";
 import PlayerTable from "../components/PlayerTable";
@@ -10,6 +11,7 @@ import Toast from "../components/Toast";
 import { useRoomSubscription } from "../hooks/useRoomSubscription";
 import {
   addPlayer,
+  createRoom,
   deletePlayer,
   updatePlayer,
   updateRoomConfig
@@ -25,6 +27,8 @@ const RoomPage = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [creatingRoom, setCreatingRoom] = useState(false);
+  const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !room && error && error.includes("不存在")) {
@@ -62,6 +66,41 @@ const RoomPage = () => {
       throw new Error("房间信息尚未加载");
     }
     await addPlayer(roomId, room.config, name);
+  };
+
+  const createRoomAndNavigate = async () => {
+    if (creatingRoom) {
+      return;
+    }
+    try {
+      setCreatingRoom(true);
+      const newRoomId = await createRoom();
+      navigate(`/room/${newRoomId}`);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "创建新房间失败，请稍后再试。";
+      showToast(message);
+    } finally {
+      setCreatingRoom(false);
+    }
+  };
+
+  const handleCreateRoomRequest = () => {
+    if (creatingRoom) {
+      return;
+    }
+    setCreateConfirmOpen(true);
+  };
+
+  const handleConfirmCreateRoom = async () => {
+    if (creatingRoom) {
+      return;
+    }
+    try {
+      await createRoomAndNavigate();
+    } finally {
+      setCreateConfirmOpen(false);
+    }
   };
 
   const commitHands = async (player: Player, hands: number) => {
@@ -164,18 +203,33 @@ const RoomPage = () => {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 pb-24 pt-4 sm:px-6">
-        <header className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 px-4 py-5 text-white shadow-lg">
-          <div className="flex flex-col gap-4">
-            <span className="mx-auto inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide">
-              <span role="img" aria-label="dice">
-                🎲
+        <header className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-6 text-white shadow-xl shadow-slate-900/25">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide">
+                <span role="img" aria-label="dice">
+                  🎲
+                </span>
+                德州扑克记分板
               </span>
-              德州扑克记分板
-            </span>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h1 className="text-center text-xl font-semibold sm:text-left sm:text-2xl">
-                房间 {roomId}
-              </h1>
+              <div className="flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-between">
+                <h1 className="text-2xl font-semibold text-white text-center sm:text-left sm:text-3xl">
+                  房间 {roomId}
+                </h1>
+                <button
+                  type="button"
+                  onClick={handleCreateRoomRequest}
+                  disabled={creatingRoom}
+                  className="inline-flex items-center gap-2 rounded-full bg-indigo-500 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-lg shadow-indigo-500/30 transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:bg-indigo-500/60 disabled:shadow-none"
+                >
+                  {creatingRoom ? "创建中..." : "新建房间"}
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-center text-xs text-slate-200 sm:text-left sm:text-sm">
+                {hintMessage ?? "实时同步中..."}
+              </p>
               <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
                 <DisplayModeToggle
                   mode={room?.config.displayMode ?? "chip"}
@@ -186,7 +240,7 @@ const RoomPage = () => {
                   type="button"
                   onClick={handleShare}
                   disabled={!room}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-medium text-white/90 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   分享链接
                 </button>
@@ -194,7 +248,7 @@ const RoomPage = () => {
                   type="button"
                   onClick={() => setQrOpen(true)}
                   disabled={!room}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-medium text-white/90 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   二维码
                 </button>
@@ -202,15 +256,12 @@ const RoomPage = () => {
                   type="button"
                   onClick={() => setSettingsOpen(true)}
                   disabled={!room}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   设置
                 </button>
               </div>
             </div>
-            <p className="text-center text-xs text-slate-200 sm:text-left sm:text-sm">
-              {hintMessage ?? "实时同步中..."}
-            </p>
           </div>
         </header>
 
@@ -260,6 +311,13 @@ const RoomPage = () => {
           onSave={handleSettingsSave}
         />
       ) : null}
+
+      <CreateRoomConfirmDialog
+        open={createConfirmOpen}
+        isLoading={creatingRoom}
+        onCancel={() => setCreateConfirmOpen(false)}
+        onConfirm={handleConfirmCreateRoom}
+      />
 
       <DeletePlayerDialog
         open={Boolean(deleteTarget)}
