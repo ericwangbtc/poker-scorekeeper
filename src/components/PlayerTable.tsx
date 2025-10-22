@@ -116,26 +116,26 @@ const PlayerTable = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full table-fixed border-collapse text-[14px] leading-tight text-slate-800">
           <thead className="sticky top-0 z-10 bg-slate-100 text-xs font-semibold uppercase text-slate-500">
             <tr>
-              <th scope="col" className="w-[240px] px-2 py-2 text-center">
+              <th scope="col" className="w-[28%] px-2 py-2 text-center">
                 姓名
               </th>
-              <th scope="col" className="w-[90px] px-2 py-2 text-center">
+              <th scope="col" className="w-[11%] px-2 py-2 text-center">
                 手数
               </th>
-              <th scope="col" className="w-[20px] px-2 py-2 text-center">
+              <th scope="col" className="w-[14%] px-2 py-2 text-center">
                 买入
               </th>
-              <th scope="col" className="w-[70px] px-2 py-2 text-center">
+              <th scope="col" className="w-[14%] px-2 py-2 text-center">
                 剩余码量
               </th>
-              <th scope="col" className="w-[30px] px-2 py-2 text-center">
+              <th scope="col" className="w-[15%] px-2 py-2 text-center">
                 盈亏
               </th>
-              <th scope="col" className="w-[60px] px-2 py-2 text-center">
+              <th scope="col" className="w-[18%] px-2 py-2 text-center">
                 操作
               </th>
             </tr>
@@ -386,7 +386,7 @@ const PlayerRow = ({
         "focus-within:bg-indigo-50 focus-within:text-slate-900 focus-within:ring-1 focus-within:ring-indigo-200"
       )}
     >
-      <td className="w-[240px] px-3 text-center">
+      <td className="w-[32%] px-3 text-center">
         <input
           type="text"
           value={nameDraft}
@@ -396,7 +396,7 @@ const PlayerRow = ({
           className="h-9 w-full rounded border border-transparent px-1 text-center text-[12px] font-medium text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
         />
       </td>
-      <td className="px-2">
+      <td className="w-[16%] px-2">
         <div className="flex items-center justify-center gap-1.5">
           <button
             type="button"
@@ -428,12 +428,12 @@ const PlayerRow = ({
           </button>
         </div>
       </td>
-      <td className="px-2 text-center">
+      <td className="w-[13%] px-2 text-center">
         <span className="inline-flex h-8 min-w-[40px] items-center justify-center rounded bg-slate-100 px-2 text-[12px] font-medium text-slate-600">
           {toCellLabel(derivedBuyIn)}
         </span>
       </td>
-      <td className="px-2 text-center">
+      <td className="w-[18%] px-2 text-center">
         <input
           type="number"
           inputMode="decimal"
@@ -455,13 +455,13 @@ const PlayerRow = ({
       </td>
       <td
         className={clsx(
-          "px-2 text-center text-[12px] font-semibold",
+          "w-[11%] px-2 text-center text-[12px] font-semibold",
           profitColor
         )}
       >
         {profitDisplay}
       </td>
-      <td className="px-2 text-center">
+      <td className="w-[10%] px-2 text-center">
         <button
           type="button"
           onClick={() => onDelete(player)}
