@@ -122,7 +122,7 @@ export const addPlayer = async (
   const player =
     trimmed.length > 0 ? computeInitialPlayer(config, trimmed) : undefined;
   if (!player) {
-    throw new Error("玩家姓名不能为空");
+    throw new Error("玩家不能为空");
   }
 
   const updates: Record<string, unknown> = {

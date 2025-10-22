@@ -124,7 +124,7 @@ const PlayerTable = ({
           <thead className="sticky top-0 z-10 bg-slate-100 text-xs font-semibold uppercase text-slate-500">
             <tr>
               <th scope="col" className="w-[35%] px-2 py-2 text-center">
-                姓名
+                玩家
               </th>
               <th scope="col" className="w-[9%] px-2 py-2 text-center">
                 手数
@@ -185,7 +185,7 @@ const PlayerTable = ({
               type="text"
               value={addNameDraft}
               onChange={(event) => setAddNameDraft(event.target.value)}
-              placeholder="输入玩家姓名"
+              placeholder="输入玩家"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-200"
             />
           </div>
@@ -284,7 +284,7 @@ const PlayerRow = ({
       await onNameCommit(player, trimmed);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "更新姓名失败，请重试。";
+        err instanceof Error ? err.message : "更新玩家失败，请重试。";
       alert(message);
       setNameDraft(player.name);
     }
