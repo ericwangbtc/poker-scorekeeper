@@ -82,8 +82,8 @@ const SettingsPanel = ({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/70 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-2xl sm:rounded-2xl">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/70 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <header className="flex items-start justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">房间设置</h2>

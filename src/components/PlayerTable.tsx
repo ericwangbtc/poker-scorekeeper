@@ -1,6 +1,6 @@
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { DisplayMode, Player, RoomConfig } from "../types";
 
 interface PlayerTableProps {
@@ -34,6 +34,9 @@ const PlayerTable = ({
   onCurrentCommit,
 }: PlayerTableProps) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [isAddFormVisible, setIsAddFormVisible] = useState(false);
+  const [addNameDraft, setAddNameDraft] = useState("");
+  const addInputRef = useRef<HTMLInputElement | null>(null);
 
   const toInputValue = useCallback(
     (chips: number) => {
@@ -73,21 +76,33 @@ const PlayerTable = ({
     [config.chipValue, displayMode]
   );
 
-  const handleAddPlayer = async () => {
+  useEffect(() => {
+    if (isAddFormVisible && addInputRef.current) {
+      addInputRef.current.focus();
+      addInputRef.current.select();
+    }
+  }, [isAddFormVisible]);
+
+  const resetAddForm = () => {
+    setAddNameDraft("");
+    setIsAddFormVisible(false);
+  };
+
+  const handleAddSubmit = async (event?: FormEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
     if (isAdding) {
       return;
     }
-    if (typeof window === "undefined") {
-      return;
-    }
-    const name = window.prompt("输入玩家姓名");
-    const trimmed = name?.trim() ?? "";
+    const trimmed = addNameDraft.trim();
     if (!trimmed) {
       return;
     }
     try {
       setIsAdding(true);
       await onAddPlayer(trimmed);
+      resetAddForm();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "添加玩家失败，请重试。";
@@ -156,14 +171,47 @@ const PlayerTable = ({
         </table>
       </div>
 
-      <button
-        type="button"
-        onClick={handleAddPlayer}
-        disabled={isAdding}
-        className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-indigo-500 text-sm font-semibold text-white transition hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:cursor-not-allowed disabled:bg-indigo-400/60"
-      >
-        {isAdding ? "添加中..." : "+ 添加玩家"}
-      </button>
+      {isAddFormVisible ? (
+        <form
+          onSubmit={handleAddSubmit}
+          className="flex w-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center"
+        >
+          <div className="flex-1">
+            <input
+              ref={addInputRef}
+              type="text"
+              value={addNameDraft}
+              onChange={(event) => setAddNameDraft(event.target.value)}
+              placeholder="输入玩家姓名"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-200"
+            />
+          </div>
+          <div className="flex justify-end gap-2 sm:justify-start">
+            <button
+              type="button"
+              onClick={resetAddForm}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              disabled={isAdding || addNameDraft.trim().length === 0}
+              className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:cursor-not-allowed disabled:bg-indigo-400/60"
+            >
+              {isAdding ? "添加中..." : "确认添加"}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsAddFormVisible(true)}
+          className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-indigo-500 text-sm font-semibold text-white transition hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+        >
+          + 添加玩家
+        </button>
+      )}
     </div>
   );
 };

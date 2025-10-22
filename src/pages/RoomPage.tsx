@@ -183,7 +183,7 @@ const RoomPage = () => {
                 disabled={!room}
                 className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                分享
+                分享链接
               </button>
               <button
                 type="button"
