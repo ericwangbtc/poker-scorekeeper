@@ -157,7 +157,7 @@ const RoomPage = () => {
     const totalValue = room.players.reduce((sum, player) => {
       return sum + player.currentChips;
     }, 0);
-    return `当前总筹码：${formatByDisplayMode(
+    return `剩余码量总计：${formatByDisplayMode(
       totalValue,
       room.config.chipValue,
       room.config.displayMode

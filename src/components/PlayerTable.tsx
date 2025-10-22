@@ -114,8 +114,8 @@ const PlayerTable = ({
               <th scope="col" className="w-[20px] px-2 py-2 text-center">
                 买入
               </th>
-              <th scope="col" className="w-[20px] px-2 py-2 text-center">
-                当前
+              <th scope="col" className="w-[70px] px-2 py-2 text-center">
+                剩余码量
               </th>
               <th scope="col" className="w-[30px] px-2 py-2 text-center">
                 盈亏
@@ -281,7 +281,7 @@ const PlayerRow = ({
       await onCurrentCommit(player, chips);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "更新当前筹码失败，请重试。";
+        err instanceof Error ? err.message : "更新剩余码量失败，请重试。";
       alert(message);
       setCurrentDraft(toInputValue(player.currentChips));
     } finally {
