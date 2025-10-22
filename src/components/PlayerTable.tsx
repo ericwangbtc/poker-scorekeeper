@@ -123,16 +123,16 @@ const PlayerTable = ({
         <table className="min-w-full table-fixed border-collapse text-[14px] leading-tight text-slate-800">
           <thead className="sticky top-0 z-10 bg-slate-100 text-xs font-semibold uppercase text-slate-500">
             <tr>
-              <th scope="col" className="w-[35%] px-2 py-2 text-center">
+              <th scope="col" className="w-[37%] px-2 py-2 text-center">
                 玩家
               </th>
               <th scope="col" className="w-[9%] px-2 py-2 text-center">
                 手数
               </th>
-              <th scope="col" className="w-[13%] px-2 py-2 text-center">
+              <th scope="col" className="w-[12%] px-2 py-2 text-center">
                 买入
               </th>
-              <th scope="col" className="w-[13%] px-2 py-2 text-center">
+              <th scope="col" className="w-[12%] px-2 py-2 text-center">
                 剩余码量
               </th>
               <th scope="col" className="w-[13%] px-2 py-2 text-center">
@@ -400,11 +400,11 @@ const PlayerRow = ({
         />
       </td>
       <td className="w-[16%] px-2">
-        <div className="flex items-center justify-center gap-1.5">
+        <div className="flex items-center justify-center gap-1">
           <button
             type="button"
             onClick={() => handleAdjustHands(-1)}
-            className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[12px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+            className="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-[11px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
             aria-label={`减少 ${player.name} 的手数`}
           >
             −
@@ -419,12 +419,12 @@ const PlayerRow = ({
             onKeyDown={handleKeyDown(commitHands, () =>
               setHandsDraft(player.hands.toString())
             )}
-            className="h-8 w-5 rounded border border-transparent bg-transparent text-center text-[12px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
+            className="h-7 w-5 rounded border border-transparent bg-transparent text-center text-[12px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
           />
           <button
             type="button"
             onClick={() => handleAdjustHands(1)}
-            className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[12px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+            className="inline-flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-[11px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
             aria-label={`增加 ${player.name} 的手数`}
           >
             +
