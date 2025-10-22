@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { DisplayMode, Player, RoomConfig } from "../types";
 
@@ -105,7 +105,7 @@ const PlayerTable = ({
         <table className="min-w-full table-fixed border-collapse text-[14px] leading-tight text-slate-800">
           <thead className="sticky top-0 z-10 bg-slate-100 text-xs font-semibold uppercase text-slate-500">
             <tr>
-              <th scope="col" className="w-[200px] px-2 py-2 text-center">
+              <th scope="col" className="w-[240px] px-2 py-2 text-center">
                 姓名
               </th>
               <th scope="col" className="w-[90px] px-2 py-2 text-center">
@@ -201,7 +201,6 @@ const PlayerRow = ({
     toInputValue(player.currentChips)
   );
   const [isEditingCurrent, setIsEditingCurrent] = useState(false);
-  const currentInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setNameDraft(player.name);
@@ -216,13 +215,6 @@ const PlayerRow = ({
       setCurrentDraft(toInputValue(player.currentChips));
     }
   }, [isEditingCurrent, player.currentChips, toInputValue]);
-
-  useEffect(() => {
-    if (isEditingCurrent && currentInputRef.current) {
-      currentInputRef.current.focus();
-      currentInputRef.current.select();
-    }
-  }, [isEditingCurrent]);
 
   const derivedBuyIn = player.buyInOverride
     ? player.buyInChips
@@ -315,10 +307,6 @@ const PlayerRow = ({
     }
   };
 
-  const handleCurrentDisplayClick = () => {
-    setIsEditingCurrent(true);
-  };
-
   const handleCurrentCancel = () => {
     setCurrentDraft(toInputValue(player.currentChips));
     setIsEditingCurrent(false);
@@ -350,14 +338,14 @@ const PlayerRow = ({
         "focus-within:bg-indigo-50 focus-within:text-slate-900 focus-within:ring-1 focus-within:ring-indigo-200"
       )}
     >
-      <td className="px-3 text-center">
+      <td className="w-[240px] px-3 text-center">
         <input
           type="text"
           value={nameDraft}
           onChange={(event) => setNameDraft(event.target.value)}
           onBlur={commitName}
           onKeyDown={handleKeyDown(commitName, () => setNameDraft(player.name))}
-          className="h-9 w-full rounded border border-transparent px-2 text-center text-[14px] font-medium text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
+          className="h-9 w-full rounded border border-transparent px-1 text-center text-[12px] font-medium text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
         />
       </td>
       <td className="px-2">
@@ -365,7 +353,7 @@ const PlayerRow = ({
           <button
             type="button"
             onClick={() => handleAdjustHands(-1)}
-            className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[13px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+            className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[12px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
             aria-label={`减少 ${player.name} 的手数`}
           >
             −
@@ -380,12 +368,12 @@ const PlayerRow = ({
             onKeyDown={handleKeyDown(commitHands, () =>
               setHandsDraft(player.hands.toString())
             )}
-            className="h-8 w-5 rounded border border-transparent bg-transparent text-center text-[14px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
+            className="h-8 w-5 rounded border border-transparent bg-transparent text-center text-[12px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
           />
           <button
             type="button"
             onClick={() => handleAdjustHands(1)}
-            className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[13px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+            className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[12px] text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-200"
             aria-label={`增加 ${player.name} 的手数`}
           >
             +
@@ -393,43 +381,33 @@ const PlayerRow = ({
         </div>
       </td>
       <td className="px-2 text-center">
-        <span className="inline-flex h-8 w-10 items-center justify-center rounded bg-slate-100 px-2 text-[13px] font-medium text-slate-600">
+        <span className="inline-flex h-8 min-w-[40px] items-center justify-center rounded bg-slate-100 px-2 text-[12px] font-medium text-slate-600">
           {toCellLabel(derivedBuyIn)}
         </span>
       </td>
       <td className="px-2 text-center">
-        {isEditingCurrent ? (
-          <input
-            ref={currentInputRef}
-            type="number"
-            inputMode="decimal"
-            value={currentDraft}
-            onChange={(event) => setCurrentDraft(event.target.value)}
-            onBlur={commitCurrent}
-            onKeyDown={async (event) => {
-              if (event.key === "Enter") {
-                event.currentTarget.blur();
-                await commitCurrent();
-              }
-              if (event.key === "Escape") {
-                handleCurrentCancel();
-              }
-            }}
-            className="h-8 w-10 rounded border border-indigo-300 bg-white px-2 text-center text-[14px] font-semibold outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={handleCurrentDisplayClick}
-            className="inline-flex h-8 w-full items-center justify-center rounded border border-transparent px-2 text-center text-[14px] font-semibold text-slate-800 transition hover:border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-1 focus:ring-indigo-200"
-          >
-            {toCellLabel(player.currentChips)}
-          </button>
-        )}
+        <input
+          type="number"
+          inputMode="decimal"
+          value={currentDraft}
+          onFocus={() => setIsEditingCurrent(true)}
+          onChange={(event) => setCurrentDraft(event.target.value)}
+          onBlur={commitCurrent}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
+            if (event.key === "Escape") {
+              handleCurrentCancel();
+              event.currentTarget.blur();
+            }
+          }}
+          className="h-8 w-16 rounded border border-transparent bg-white px-2 text-center text-[12px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
+        />
       </td>
       <td
         className={clsx(
-          "px-2 text-center text-[14px] font-semibold",
+          "px-2 text-center text-[12px] font-semibold",
           profitColor
         )}
       >
@@ -439,7 +417,7 @@ const PlayerRow = ({
         <button
           type="button"
           onClick={() => onDelete(player)}
-          className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[16px] text-slate-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-1 focus:ring-red-200"
+          className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-[14px] text-slate-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-1 focus:ring-red-200"
           aria-label={`删除玩家 ${player.name}`}
         >
           🗑
