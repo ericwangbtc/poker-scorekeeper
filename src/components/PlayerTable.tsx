@@ -31,7 +31,7 @@ const PlayerTable = ({
   onNameCommit,
   onHandsCommit,
   onHandsAdjust,
-  onCurrentCommit
+  onCurrentCommit,
 }: PlayerTableProps) => {
   const [isAdding, setIsAdding] = useState(false);
 
@@ -105,19 +105,19 @@ const PlayerTable = ({
         <table className="min-w-full table-fixed border-collapse text-[14px] leading-tight text-slate-800">
           <thead className="sticky top-0 z-10 bg-slate-100 text-xs font-semibold uppercase text-slate-500">
             <tr>
-              <th scope="col" className="w-[140px] px-3 py-2 text-left">
+              <th scope="col" className="w-[200px] px-2 py-2 text-center">
                 姓名
               </th>
-              <th scope="col" className="w-[110px] px-2 py-2 text-center">
+              <th scope="col" className="w-[90px] px-2 py-2 text-center">
                 手数
               </th>
-              <th scope="col" className="w-[110px] px-2 py-2 text-right">
+              <th scope="col" className="w-[20px] px-2 py-2 text-center">
                 买入
               </th>
-              <th scope="col" className="w-[120px] px-2 py-2 text-right">
+              <th scope="col" className="w-[20px] px-2 py-2 text-center">
                 当前
               </th>
-              <th scope="col" className="w-[110px] px-2 py-2 text-right">
+              <th scope="col" className="w-[30px] px-2 py-2 text-center">
                 盈亏
               </th>
               <th scope="col" className="w-[60px] px-2 py-2 text-center">
@@ -193,7 +193,7 @@ const PlayerRow = ({
   onHandsCommit,
   onHandsAdjust,
   onCurrentCommit,
-  onDelete
+  onDelete,
 }: PlayerRowProps) => {
   const [nameDraft, setNameDraft] = useState(player.name);
   const [handsDraft, setHandsDraft] = useState(player.hands.toString());
@@ -350,16 +350,14 @@ const PlayerRow = ({
         "focus-within:bg-indigo-50 focus-within:text-slate-900 focus-within:ring-1 focus-within:ring-indigo-200"
       )}
     >
-      <td className="px-3">
+      <td className="px-3 text-center">
         <input
           type="text"
           value={nameDraft}
           onChange={(event) => setNameDraft(event.target.value)}
           onBlur={commitName}
-          onKeyDown={handleKeyDown(commitName, () =>
-            setNameDraft(player.name)
-          )}
-          className="h-9 w-full rounded border border-transparent px-2 text-[14px] font-medium text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
+          onKeyDown={handleKeyDown(commitName, () => setNameDraft(player.name))}
+          className="h-9 w-full rounded border border-transparent px-2 text-center text-[14px] font-medium text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
         />
       </td>
       <td className="px-2">
@@ -382,7 +380,7 @@ const PlayerRow = ({
             onKeyDown={handleKeyDown(commitHands, () =>
               setHandsDraft(player.hands.toString())
             )}
-            className="h-8 w-14 rounded border border-transparent bg-transparent text-center text-[14px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
+            className="h-8 w-5 rounded border border-transparent bg-transparent text-center text-[14px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-0"
           />
           <button
             type="button"
@@ -394,12 +392,12 @@ const PlayerRow = ({
           </button>
         </div>
       </td>
-      <td className="px-2">
-        <span className="inline-flex h-8 w-full items-center justify-end rounded bg-slate-100 px-2 text-[13px] font-medium text-slate-600">
+      <td className="px-2 text-center">
+        <span className="inline-flex h-8 w-10 items-center justify-center rounded bg-slate-100 px-2 text-[13px] font-medium text-slate-600">
           {toCellLabel(derivedBuyIn)}
         </span>
       </td>
-      <td className="px-2 text-right">
+      <td className="px-2 text-center">
         {isEditingCurrent ? (
           <input
             ref={currentInputRef}
@@ -417,19 +415,24 @@ const PlayerRow = ({
                 handleCurrentCancel();
               }
             }}
-            className="h-8 w-full rounded border border-indigo-300 bg-white px-2 text-right text-[14px] font-semibold outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
+            className="h-8 w-10 rounded border border-indigo-300 bg-white px-2 text-center text-[14px] font-semibold outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
           />
         ) : (
           <button
             type="button"
             onClick={handleCurrentDisplayClick}
-            className="inline-flex h-8 w-full items-center justify-end rounded border border-transparent px-2 text-right text-[14px] font-semibold text-slate-800 transition hover:border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+            className="inline-flex h-8 w-full items-center justify-center rounded border border-transparent px-2 text-center text-[14px] font-semibold text-slate-800 transition hover:border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-1 focus:ring-indigo-200"
           >
             {toCellLabel(player.currentChips)}
           </button>
         )}
       </td>
-      <td className={clsx("px-2 text-right text-[14px] font-semibold", profitColor)}>
+      <td
+        className={clsx(
+          "px-2 text-center text-[14px] font-semibold",
+          profitColor
+        )}
+      >
         {profitDisplay}
       </td>
       <td className="px-2 text-center">
