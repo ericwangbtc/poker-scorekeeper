@@ -24,7 +24,7 @@ describe("calculateTotals", () => {
       }
     ];
 
-    const totals = calculateTotals(players);
+    const totals = calculateTotals(players, 500);
     expect(totals.totalBuyIn).toBe(1500);
     expect(totals.totalCurrent).toBe(1500);
     expect(totals.delta).toBe(0);
@@ -53,10 +53,30 @@ describe("calculateTotals", () => {
       }
     ];
 
-    const totals = calculateTotals(players);
+    const totals = calculateTotals(players, 500);
     expect(totals.totalBuyIn).toBe(1000);
     expect(totals.totalCurrent).toBe(1200);
     expect(totals.delta).toBe(200);
+    expect(totals.isBalanced).toBe(false);
+  });
+
+  it("respects manual buy-in override values", () => {
+    const players: Player[] = [
+      {
+        id: "p1",
+        name: "王五",
+        hands: 2,
+        currentChips: 1000,
+        buyInChips: 600,
+        order: 1,
+        buyInOverride: true
+      }
+    ];
+
+    const totals = calculateTotals(players, 500);
+    expect(totals.totalBuyIn).toBe(600);
+    expect(totals.totalCurrent).toBe(1000);
+    expect(totals.delta).toBe(400);
     expect(totals.isBalanced).toBe(false);
   });
 });

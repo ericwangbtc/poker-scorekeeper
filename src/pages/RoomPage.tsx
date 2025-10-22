@@ -69,10 +69,11 @@ const RoomPage = () => {
       throw new Error("房间信息尚未加载");
     }
     const rounded = Math.round(hands);
-    const updates: Partial<Player> = { hands: rounded };
-    if (!player.buyInOverride) {
-      updates.buyInChips = rounded * room.config.chipsPerHand;
-    }
+    const updates: Partial<Player> = {
+      hands: rounded,
+      buyInChips: rounded * room.config.chipsPerHand,
+      buyInOverride: false
+    };
     await updatePlayer(roomId, player.id, updates);
   };
 
@@ -89,36 +90,11 @@ const RoomPage = () => {
     });
   };
 
-  const commitBuyIn = async (player: Player, chips: number) => {
-    if (!roomId) {
-      throw new Error("房间信息尚未加载");
-    }
-    await updatePlayer(roomId, player.id, {
-      buyInChips: Math.round(chips * 100) / 100,
-      buyInOverride: true
-    });
-  };
-
-  const toggleBuyInMode = async (player: Player, override: boolean) => {
-    if (!roomId || !room) {
-      throw new Error("房间信息尚未加载");
-    }
-    const updates: Partial<Player> = {
-      buyInOverride: override
-    };
-    if (!override) {
-      updates.buyInChips = player.hands * room.config.chipsPerHand;
-    }
-    await updatePlayer(roomId, player.id, updates);
-  };
-
   const commitName = async (player: Player, name: string) => {
     if (!roomId) {
       throw new Error("房间信息尚未加载");
     }
-    await updatePlayer(roomId, player.id, {
-      name
-    });
+    await updatePlayer(roomId, player.id, { name });
   };
 
   const handleDelete = async () => {
@@ -189,40 +165,40 @@ const RoomPage = () => {
   }, [room]);
 
   return (
-    <div className="min-h-full bg-slate-100">
-      <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-10">
-        <header className="flex flex-col items-start gap-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-8 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+    <div className="flex min-h-screen flex-col bg-slate-100">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 pb-24 pt-4 sm:px-6">
+        <header className="flex flex-col gap-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 px-4 py-5 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide">
               <span role="img" aria-label="dice">
                 🎲
               </span>
               德州扑克记分板
-            </div>
-            <div className="mt-3 flex items-center gap-3">
-              <h1 className="text-2xl font-semibold sm:text-3xl">
-                房间: {roomId}
-              </h1>
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-semibold sm:text-2xl">房间 {roomId}</h1>
               <button
                 type="button"
                 onClick={handleShare}
-                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/50"
+                disabled={!room}
+                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 分享
               </button>
               <button
                 type="button"
                 onClick={() => setQrOpen(true)}
-                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/50"
+                disabled={!room}
+                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 二维码
               </button>
             </div>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="text-xs text-slate-200 sm:text-sm">
               {hintMessage ?? "实时同步中..."}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-start gap-3 sm:items-end">
             <DisplayModeToggle
               mode={room?.config.displayMode ?? "chip"}
               onChange={handleDisplayModeChange}
@@ -231,23 +207,24 @@ const RoomPage = () => {
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
+              disabled={!room}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-4 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
             >
               设置
             </button>
           </div>
         </header>
 
-        {loading ? (
-          <div className="flex flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-slate-500">
-            正在加载房间数据...
-          </div>
-        ) : error && !room ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center text-sm text-red-600">
-            {error}
-          </div>
-        ) : room ? (
-          <>
+        <main className="mt-4 flex-1">
+          {loading ? (
+            <div className="flex h-full min-h-[240px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm text-slate-500">
+              正在加载房间数据...
+            </div>
+          ) : error && !room ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center text-sm text-red-600">
+              {error}
+            </div>
+          ) : room ? (
             <PlayerTable
               players={room.players}
               config={room.config}
@@ -258,17 +235,22 @@ const RoomPage = () => {
               onHandsCommit={commitHands}
               onHandsAdjust={adjustHands}
               onCurrentCommit={commitCurrentChips}
-              onBuyInCommit={commitBuyIn}
-              onToggleBuyInMode={toggleBuyInMode}
             />
+          ) : null}
+        </main>
+      </div>
+
+      {room ? (
+        <div className="sticky bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-slate-100/80 backdrop-blur">
+          <div className="mx-auto w-full max-w-5xl">
             <StatsSummary
               players={room.players}
               config={room.config}
               displayMode={room.config.displayMode}
             />
-          </>
-        ) : null}
-      </div>
+          </div>
+        </div>
+      ) : null}
 
       {room ? (
         <SettingsPanel

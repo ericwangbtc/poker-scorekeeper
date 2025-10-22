@@ -1,9 +1,14 @@
 import { Player } from "../types";
 
-export const calculateTotals = (players: Player[]) => {
+const isNearlyZero = (value: number) => Math.abs(value) < 0.0001;
+
+export const calculateTotals = (players: Player[], chipsPerHand: number) => {
   const totals = players.reduce(
     (acc, player) => {
-      acc.buyIn += player.buyInChips;
+      const buyIn = player.buyInOverride
+        ? player.buyInChips
+        : player.hands * chipsPerHand;
+      acc.buyIn += buyIn;
       acc.current += player.currentChips;
       return acc;
     },
@@ -16,6 +21,6 @@ export const calculateTotals = (players: Player[]) => {
     totalBuyIn: totals.buyIn,
     totalCurrent: totals.current,
     delta,
-    isBalanced: delta === 0
+    isBalanced: isNearlyZero(delta)
   };
 };
