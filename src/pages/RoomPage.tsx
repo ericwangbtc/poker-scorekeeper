@@ -15,7 +15,7 @@ import {
   updateRoomConfig
 } from "../services/roomService";
 import { DisplayMode, Player } from "../types";
-import { formatByDisplayMode } from "../utils/format";
+import { formatCash, formatChips } from "../utils/format";
 
 const RoomPage = () => {
   const navigate = useNavigate();
@@ -154,64 +154,63 @@ const RoomPage = () => {
     if (!room) {
       return null;
     }
-    const totalValue = room.players.reduce((sum, player) => {
-      return sum + player.currentChips;
-    }, 0);
-    return `剩余码量总计：${formatByDisplayMode(
-      totalValue,
-      room.config.chipValue,
-      room.config.displayMode
+    const { chipsPerHand, chipValue } = room.config;
+    return `每手筹码：${formatChips(chipsPerHand)} · 人民币：${formatCash(
+      chipsPerHand,
+      chipValue
     )}`;
   }, [room]);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 pb-24 pt-4 sm:px-6">
-        <header className="flex flex-col gap-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 px-4 py-5 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide">
+        <header className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 px-4 py-5 text-white shadow-lg">
+          <div className="flex flex-col gap-4">
+            <span className="mx-auto inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide">
               <span role="img" aria-label="dice">
                 🎲
               </span>
               德州扑克记分板
             </span>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-semibold sm:text-2xl">房间 {roomId}</h1>
-              <button
-                type="button"
-                onClick={handleShare}
-                disabled={!room}
-                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                分享链接
-              </button>
-              <button
-                type="button"
-                onClick={() => setQrOpen(true)}
-                disabled={!room}
-                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                二维码
-              </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="text-center text-xl font-semibold sm:text-left sm:text-2xl">
+                房间 {roomId}
+              </h1>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+                <DisplayModeToggle
+                  mode={room?.config.displayMode ?? "chip"}
+                  onChange={handleDisplayModeChange}
+                  disabled={!room}
+                />
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  disabled={!room}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  分享链接
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQrOpen(true)}
+                  disabled={!room}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  二维码
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen(true)}
+                  disabled={!room}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  设置
+                </button>
+              </div>
             </div>
-            <p className="text-xs text-slate-200 sm:text-sm">
+            <p className="text-center text-xs text-slate-200 sm:text-left sm:text-sm">
               {hintMessage ?? "实时同步中..."}
             </p>
-          </div>
-          <div className="flex flex-col items-start gap-3 sm:items-end">
-            <DisplayModeToggle
-              mode={room?.config.displayMode ?? "chip"}
-              onChange={handleDisplayModeChange}
-              disabled={!room}
-            />
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              disabled={!room}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-4 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              设置
-            </button>
           </div>
         </header>
 
