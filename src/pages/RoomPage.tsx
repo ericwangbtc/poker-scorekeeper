@@ -203,8 +203,8 @@ const RoomPage = () => {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3 pb-24 pt-4 sm:px-6">
-        <header className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-6 text-white shadow-xl shadow-slate-900/25">
-          <div className="flex flex-col gap-6">
+        <header className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-4 text-white shadow-xl shadow-slate-900/25">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col items-center gap-3 text-center">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide">
                 <span role="img" aria-label="dice">
@@ -226,7 +226,7 @@ const RoomPage = () => {
                 </button>
               </div>
             </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-center text-xs text-slate-200 sm:text-left sm:text-sm">
                 {hintMessage ?? "实时同步中..."}
               </p>
@@ -240,7 +240,7 @@ const RoomPage = () => {
                   type="button"
                   onClick={handleShare}
                   disabled={!room}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-medium text-white/90 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-2 py-2 text-xs font-medium text-white/90 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   分享链接
                 </button>
@@ -248,7 +248,7 @@ const RoomPage = () => {
                   type="button"
                   onClick={() => setQrOpen(true)}
                   disabled={!room}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-medium text-white/90 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-2 py-2 text-xs font-medium text-white/90 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   二维码
                 </button>
@@ -256,7 +256,7 @@ const RoomPage = () => {
                   type="button"
                   onClick={() => setSettingsOpen(true)}
                   disabled={!room}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   设置
                 </button>

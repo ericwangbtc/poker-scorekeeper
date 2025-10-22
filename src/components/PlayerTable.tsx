@@ -123,22 +123,22 @@ const PlayerTable = ({
         <table className="min-w-full table-fixed border-collapse text-[14px] leading-tight text-slate-800">
           <thead className="sticky top-0 z-10 bg-slate-100 text-xs font-semibold uppercase text-slate-500">
             <tr>
-              <th scope="col" className="w-[28%] px-2 py-2 text-center">
+              <th scope="col" className="w-[35%] px-2 py-2 text-center">
                 姓名
               </th>
-              <th scope="col" className="w-[11%] px-2 py-2 text-center">
+              <th scope="col" className="w-[9%] px-2 py-2 text-center">
                 手数
               </th>
-              <th scope="col" className="w-[14%] px-2 py-2 text-center">
+              <th scope="col" className="w-[13%] px-2 py-2 text-center">
                 买入
               </th>
-              <th scope="col" className="w-[14%] px-2 py-2 text-center">
+              <th scope="col" className="w-[13%] px-2 py-2 text-center">
                 剩余码量
               </th>
-              <th scope="col" className="w-[15%] px-2 py-2 text-center">
+              <th scope="col" className="w-[13%] px-2 py-2 text-center">
                 盈亏
               </th>
-              <th scope="col" className="w-[18%] px-2 py-2 text-center">
+              <th scope="col" className="w-[11%] px-2 py-2 text-center">
                 操作
               </th>
             </tr>
