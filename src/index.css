@@ -21,6 +21,12 @@ body {
   color: #0f172a;
 }
 
+@media (max-width: 640px) {
+  :root {
+    font-size: 87.5%;
+  }
+}
+
 input[type="number"] {
   -moz-appearance: textfield;
 }
