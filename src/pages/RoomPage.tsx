@@ -34,6 +34,7 @@ const RoomPage = () => {
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("chip");
   const previousPlayersRef = useRef<Record<string, Player>>({});
   const hasInitializedRef = useRef(false);
 
@@ -227,12 +228,28 @@ const RoomPage = () => {
     }
   };
 
-  const handleDisplayModeChange = async (mode: DisplayMode) => {
+  const handleDisplayModeChange = (mode: DisplayMode) => {
+    setDisplayMode(mode);
+    if (typeof window !== "undefined" && roomId) {
+      window.localStorage.setItem(`displayMode:${roomId}`, mode);
+    }
+  };
+
+  useEffect(() => {
     if (!roomId) {
+      setDisplayMode("chip");
       return;
     }
-    await updateRoomConfig(roomId, { displayMode: mode });
-  };
+    if (typeof window === "undefined") {
+      return;
+    }
+    const stored = window.localStorage.getItem(`displayMode:${roomId}`);
+    if (stored === "chip" || stored === "cash") {
+      setDisplayMode(stored);
+      return;
+    }
+    setDisplayMode(room?.config.displayMode ?? "chip");
+  }, [roomId, room?.config.displayMode]);
 
   const handleSettingsSave = async (values: {
     chipsPerHand: number;
@@ -309,7 +326,7 @@ const RoomPage = () => {
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
                   <DisplayModeToggle
-                    mode={room?.config.displayMode ?? "chip"}
+                    mode={displayMode}
                     onChange={handleDisplayModeChange}
                     disabled={!room}
                   />
@@ -355,7 +372,7 @@ const RoomPage = () => {
               <PlayerTable
                 players={room.players}
                 config={room.config}
-                displayMode={room.config.displayMode}
+                displayMode={displayMode}
                 onAddPlayer={handleAddPlayer}
                 onRequestDelete={setDeleteTarget}
                 onNameCommit={commitName}
@@ -373,7 +390,7 @@ const RoomPage = () => {
             <StatsSummary
               players={room.players}
               config={room.config}
-              displayMode={room.config.displayMode}
+              displayMode={displayMode}
             />
           </div>
         </div>
