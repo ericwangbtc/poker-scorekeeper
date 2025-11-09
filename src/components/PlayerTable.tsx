@@ -393,6 +393,7 @@ const PlayerRow = ({
         <input
           type="number"
           inputMode="decimal"
+          placeholder="请输入"
           value={currentDraft}
           onFocus={() => setIsEditingCurrent(true)}
           onChange={(event) => setCurrentDraft(event.target.value)}
@@ -406,7 +407,7 @@ const PlayerRow = ({
               event.currentTarget.blur();
             }
           }}
-          className="h-8 w-16 rounded border border-transparent bg-white px-2 text-center text-[12px] font-semibold text-slate-800 outline-none transition focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
+          className="h-8 w-16 rounded border border-transparent bg-slate-100 px-2 text-center text-[12px] font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-1 focus:ring-indigo-200"
         />
       </td>
       <td
