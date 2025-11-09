@@ -17,6 +17,12 @@ export interface Player {
   buyInOverride?: boolean;
 }
 
+export interface HistoryEntry {
+  id: string;
+  message: string;
+  timestamp: number;
+}
+
 export interface RoomSnapshot {
   config?: RoomConfig;
   players?: Record<string, Player>;

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CreateRoomConfirmDialog from "../components/CreateRoomConfirmDialog";
 import DisplayModeToggle from "../components/DisplayModeToggle";
 import DeletePlayerDialog from "../components/DeletePlayerDialog";
+import HistoryPanel from "../components/HistoryPanel";
 import PlayerTable from "../components/PlayerTable";
 import QRCodeModal from "../components/QRCodeModal";
 import SettingsPanel from "../components/SettingsPanel";
@@ -16,8 +17,10 @@ import {
   updatePlayer,
   updateRoomConfig
 } from "../services/roomService";
-import { DisplayMode, Player } from "../types";
+import { DisplayMode, HistoryEntry, Player } from "../types";
 import { formatCash, formatChips } from "../utils/format";
+
+const MAX_HISTORY_ENTRIES = 30;
 
 const RoomPage = () => {
   const navigate = useNavigate();
@@ -29,12 +32,85 @@ const RoomPage = () => {
   const [qrOpen, setQrOpen] = useState(false);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
+  const previousPlayersRef = useRef<Record<string, Player>>({});
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
     if (!loading && !room && error && error.includes("不存在")) {
       navigate("/404", { replace: true });
     }
   }, [error, loading, navigate, room]);
+
+  useEffect(() => {
+    previousPlayersRef.current = {};
+    hasInitializedRef.current = false;
+    setHistoryEntries([]);
+    setHistoryOpen(false);
+  }, [roomId]);
+
+  useEffect(() => {
+    if (!room) {
+      previousPlayersRef.current = {};
+      hasInitializedRef.current = false;
+      setHistoryEntries([]);
+      return;
+    }
+
+    const prevPlayers = previousPlayersRef.current;
+    const currentPlayers = room.players.reduce<Record<string, Player>>(
+      (acc, player) => {
+        acc[player.id] = player;
+        return acc;
+      },
+      {}
+    );
+
+    const isInitialSync = !hasInitializedRef.current;
+    const nextEntries: HistoryEntry[] = [];
+
+    room.players.forEach((player) => {
+      const prev = prevPlayers[player.id];
+      const now = Date.now();
+      if (!prev) {
+        nextEntries.push({
+          id: `${now}-${player.id}`,
+          message: `${player.name} 加入了房间`,
+          timestamp: now
+        });
+        return;
+      }
+
+      if (isInitialSync) {
+        return;
+      }
+
+      if (player.hands !== prev.hands) {
+        const diff = player.hands - prev.hands;
+        const absDiff = Math.abs(diff);
+        const isSingleHand = absDiff === 1;
+        const diffLabel = diff > 0 ? "增加" : "减少";
+        const currentLabel = isSingleHand ? `（当前 ${player.hands} 手）` : "";
+        const entry: HistoryEntry = {
+          id: `${now}-${player.id}-${diff > 0 ? "inc" : "dec"}`,
+          message: `${player.name} ${diffLabel}了 ${absDiff} 手${currentLabel}`,
+          timestamp: now
+        };
+        nextEntries.push(entry);
+      }
+    });
+
+    if (nextEntries.length > 0) {
+      setHistoryEntries((previous) => {
+        const merged = [...nextEntries, ...previous];
+        return merged.slice(0, MAX_HISTORY_ENTRIES);
+      });
+    }
+
+    previousPlayersRef.current = currentPlayers;
+    hasInitializedRef.current = true;
+  }, [room]);
 
   const shareLink = useMemo(() => {
     if (!roomId || typeof window === "undefined") {
@@ -330,6 +406,20 @@ const RoomPage = () => {
       <QRCodeModal open={qrOpen} link={shareLink} onClose={() => setQrOpen(false)} />
 
       <Toast open={Boolean(toastMessage)} message={toastMessage} />
+
+      <button
+        type="button"
+        onClick={() => setHistoryOpen((open) => !open)}
+        className="fixed bottom-16 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-3 text-xs font-semibold text-white shadow-2xl shadow-slate-900/30 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-white/40"
+      >
+        {historyOpen ? "隐藏历史" : "历史记录"}
+      </button>
+
+      <HistoryPanel
+        open={historyOpen}
+        entries={historyEntries}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   );
 };
