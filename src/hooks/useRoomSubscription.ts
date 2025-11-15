@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { MAX_HISTORY_ENTRIES } from "../constants";
 import { isFirebaseConfigured } from "../services/firebase";
 import {
   createDefaultRoomConfig,
   subscribeToRoom
 } from "../services/roomService";
-import { Player, RoomData, RoomSnapshot } from "../types";
+import { HistoryEntry, Player, RoomData, RoomSnapshot } from "../types";
 
 const normalizePlayers = (playersRecord?: Record<string, Player>) => {
   if (!playersRecord) {
@@ -18,12 +19,22 @@ const normalizePlayers = (playersRecord?: Record<string, Player>) => {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 };
 
+const normalizeHistory = (historyRecord?: Record<string, HistoryEntry>) => {
+  if (!historyRecord) {
+    return [];
+  }
+  return Object.values(historyRecord)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, MAX_HISTORY_ENTRIES);
+};
+
 const toRoomData = (roomId: string, snapshot: RoomSnapshot): RoomData => {
   const config = snapshot.config ?? createDefaultRoomConfig();
   return {
     id: roomId,
     config,
     players: normalizePlayers(snapshot.players),
+    history: normalizeHistory(snapshot.history),
     updatedAt: snapshot.updatedAt ?? Date.now(),
     expiresAt: snapshot.expiresAt
   };

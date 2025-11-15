@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CreateRoomConfirmDialog from "../components/CreateRoomConfirmDialog";
 import DisplayModeToggle from "../components/DisplayModeToggle";
@@ -17,10 +17,9 @@ import {
   updatePlayer,
   updateRoomConfig
 } from "../services/roomService";
-import { DisplayMode, HistoryEntry, Player } from "../types";
+import { DisplayMode, Player } from "../types";
 import { formatCash, formatChips } from "../utils/format";
-
-const MAX_HISTORY_ENTRIES = 30;
+import { createHistoryEntry } from "../utils/history";
 
 const RoomPage = () => {
   const navigate = useNavigate();
@@ -33,10 +32,7 @@ const RoomPage = () => {
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [displayMode, setDisplayMode] = useState<DisplayMode>("chip");
-  const previousPlayersRef = useRef<Record<string, Player>>({});
-  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
     if (!loading && !room && error && error.includes("不存在")) {
@@ -45,73 +41,8 @@ const RoomPage = () => {
   }, [error, loading, navigate, room]);
 
   useEffect(() => {
-    previousPlayersRef.current = {};
-    hasInitializedRef.current = false;
-    setHistoryEntries([]);
     setHistoryOpen(false);
   }, [roomId]);
-
-  useEffect(() => {
-    if (!room) {
-      previousPlayersRef.current = {};
-      hasInitializedRef.current = false;
-      setHistoryEntries([]);
-      return;
-    }
-
-    const prevPlayers = previousPlayersRef.current;
-    const currentPlayers = room.players.reduce<Record<string, Player>>(
-      (acc, player) => {
-        acc[player.id] = player;
-        return acc;
-      },
-      {}
-    );
-
-    const isInitialSync = !hasInitializedRef.current;
-    const nextEntries: HistoryEntry[] = [];
-
-    room.players.forEach((player) => {
-      const prev = prevPlayers[player.id];
-      const now = Date.now();
-      if (!prev) {
-        nextEntries.push({
-          id: `${now}-${player.id}`,
-          message: `${player.name} 加入了房间`,
-          timestamp: now
-        });
-        return;
-      }
-
-      if (isInitialSync) {
-        return;
-      }
-
-      if (player.hands !== prev.hands) {
-        const diff = player.hands - prev.hands;
-        const absDiff = Math.abs(diff);
-        const isSingleHand = absDiff === 1;
-        const diffLabel = diff > 0 ? "增加" : "减少";
-        const currentLabel = isSingleHand ? `（当前 ${player.hands} 手）` : "";
-        const entry: HistoryEntry = {
-          id: `${now}-${player.id}-${diff > 0 ? "inc" : "dec"}`,
-          message: `${player.name} ${diffLabel}了 ${absDiff} 手${currentLabel}`,
-          timestamp: now
-        };
-        nextEntries.push(entry);
-      }
-    });
-
-    if (nextEntries.length > 0) {
-      setHistoryEntries((previous) => {
-        const merged = [...nextEntries, ...previous];
-        return merged.slice(0, MAX_HISTORY_ENTRIES);
-      });
-    }
-
-    previousPlayersRef.current = currentPlayers;
-    hasInitializedRef.current = true;
-  }, [room]);
 
   const shareLink = useMemo(() => {
     if (!roomId || typeof window === "undefined") {
@@ -180,6 +111,20 @@ const RoomPage = () => {
     }
   };
 
+  const buildHandsHistoryMessage = (
+    playerName: string,
+    diff: number,
+    newHands: number
+  ) => {
+    const absDiff = Math.abs(diff);
+    if (absDiff === 0) {
+      return null;
+    }
+    const diffLabel = diff > 0 ? "增加" : "减少";
+    const currentLabel = absDiff === 1 ? `（当前 ${newHands} 手）` : "";
+    return `${playerName} ${diffLabel}了 ${absDiff} 手${currentLabel}`;
+  };
+
   const commitHands = async (player: Player, hands: number) => {
     if (!roomId || !room) {
       throw new Error("房间信息尚未加载");
@@ -190,7 +135,10 @@ const RoomPage = () => {
       buyInChips: rounded * room.config.chipsPerHand,
       buyInOverride: false
     };
-    await updatePlayer(roomId, player.id, updates);
+    const diff = rounded - player.hands;
+    const message = buildHandsHistoryMessage(player.name, diff, rounded);
+    const historyEntry = message ? createHistoryEntry(message) : undefined;
+    await updatePlayer(roomId, player.id, updates, historyEntry);
   };
 
   const adjustHands = async (player: Player, delta: number) => {
@@ -292,6 +240,8 @@ const RoomPage = () => {
       chipValue
     )}`;
   }, [room]);
+
+  const historyEntries = room?.history ?? [];
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-slate-100">

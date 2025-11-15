@@ -13,7 +13,8 @@ import {
   DEFAULT_CHIP_VALUE,
   MILLISECONDS_IN_DAY
 } from "../constants";
-import { Player, RoomConfig, RoomSnapshot } from "../types";
+import { HistoryEntry, Player, RoomConfig, RoomSnapshot } from "../types";
+import { createHistoryEntry } from "../utils/history";
 import { generatePlayerId, generateRoomId } from "../utils/id";
 import { database } from "./firebase";
 
@@ -26,6 +27,9 @@ const ensureDatabase = () => {
 
 const buildRoomPath = (roomId: string, path = "") =>
   path ? `rooms/${roomId}/${path}` : `rooms/${roomId}`;
+
+const buildHistoryPath = (roomId: string, entryId: string) =>
+  buildRoomPath(roomId, `history/${entryId}`);
 
 export const subscribeToRoom = (
   roomId: string,
@@ -86,16 +90,31 @@ export const createRoom = async (name?: string) => {
   const maxAttempts = 10;
   let roomId = "";
   const config = createDefaultRoomConfig();
-  const roomPayload = {
+  const players: Record<string, Player> = {};
+  const history: Record<string, HistoryEntry> = {};
+
+  if (name && name.trim()) {
+    const initialPlayer = computeInitialPlayer(config, name.trim());
+    players[initialPlayer.id] = initialPlayer;
+    const entry = createHistoryEntry(`${initialPlayer.name} 加入了房间`, config.createdAt);
+    history[entry.id] = entry;
+  }
+
+  const roomPayload: {
+    config: RoomConfig;
+    players: Record<string, Player>;
+    history?: Record<string, HistoryEntry>;
+    updatedAt: number;
+    expiresAt: number;
+  } = {
     config,
-    players: {} as Record<string, Player>,
+    players,
     updatedAt: config.createdAt,
     expiresAt: config.createdAt + DAYS_TO_EXPIRE * MILLISECONDS_IN_DAY
   };
 
-  if (name && name.trim()) {
-    const initialPlayer = computeInitialPlayer(config, name.trim());
-    roomPayload.players[initialPlayer.id] = initialPlayer;
+  if (Object.keys(history).length > 0) {
+    roomPayload.history = history;
   }
 
   while (attempts < maxAttempts) {
@@ -129,6 +148,8 @@ export const addPlayer = async (
     [buildRoomPath(roomId, `players/${player.id}`)]: player,
     [buildRoomPath(roomId, "updatedAt")]: now()
   };
+  const historyEntry = createHistoryEntry(`${player.name} 加入了房间`);
+  updates[buildHistoryPath(roomId, historyEntry.id)] = historyEntry;
   await update(ref(db), updates);
 };
 
@@ -153,7 +174,8 @@ export const updateRoomConfig = async (
 export const updatePlayer = async (
   roomId: string,
   playerId: string,
-  updates: Partial<Player>
+  updates: Partial<Player>,
+  historyEntry?: HistoryEntry
 ) => {
   const db = ensureDatabase();
   const payload: Record<string, unknown> = {
@@ -165,6 +187,10 @@ export const updatePlayer = async (
       payload[buildRoomPath(roomId, `players/${playerId}/${key}`)] = value;
     }
   });
+
+  if (historyEntry) {
+    payload[buildHistoryPath(roomId, historyEntry.id)] = historyEntry;
+  }
 
   await update(ref(db), payload);
 };

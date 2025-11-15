@@ -26,6 +26,7 @@ export interface HistoryEntry {
 export interface RoomSnapshot {
   config?: RoomConfig;
   players?: Record<string, Player>;
+  history?: Record<string, HistoryEntry>;
   updatedAt?: number;
   expiresAt?: number;
 }
@@ -34,6 +35,7 @@ export interface RoomData {
   id: string;
   config: RoomConfig;
   players: Player[];
+  history: HistoryEntry[];
   updatedAt: number;
   expiresAt?: number;
 }

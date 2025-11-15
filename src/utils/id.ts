@@ -15,3 +15,9 @@ export const generatePlayerId = () => {
   }
   return `player_${Math.random().toString(36).slice(2, 10)}`;
 };
+
+export const generateHistoryId = (timestamp?: number) => {
+  const timePortion = (timestamp ?? Date.now()).toString(36);
+  const randomPortion = Math.random().toString(36).slice(2, 8);
+  return `history_${timePortion}_${randomPortion}`;
+};
