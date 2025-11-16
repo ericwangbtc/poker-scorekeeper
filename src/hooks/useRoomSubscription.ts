@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { MAX_HISTORY_ENTRIES } from "../constants";
 import { isFirebaseConfigured } from "../services/firebase";
 import {
   createDefaultRoomConfig,
@@ -23,9 +22,7 @@ const normalizeHistory = (historyRecord?: Record<string, HistoryEntry>) => {
   if (!historyRecord) {
     return [];
   }
-  return Object.values(historyRecord)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, MAX_HISTORY_ENTRIES);
+  return Object.values(historyRecord).sort((a, b) => b.timestamp - a.timestamp);
 };
 
 const toRoomData = (roomId: string, snapshot: RoomSnapshot): RoomData => {
