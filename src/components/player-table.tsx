@@ -286,11 +286,11 @@ function PlayerRow({
         />
       </td>
       <td className="px-1">
-        <div className="flex items-center justify-center gap-1">
+        <div className="flex items-center justify-center gap-0.5">
           <button
             type="button"
             onClick={() => handleAdjustHands(-1)}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
+            className="flex h-8 w-7 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
           >
             −
           </button>
@@ -303,12 +303,12 @@ function PlayerRow({
             onKeyDown={handleKeyDown(commitHands, () =>
               setHandsDraft(player.hands.toString())
             )}
-            className="h-9 w-8 border-transparent bg-transparent px-0 text-center text-sm font-bold focus:border-primary focus:bg-muted"
+            className="h-8 w-10 border-transparent bg-transparent px-0 text-center text-sm font-bold focus:border-primary focus:bg-muted"
           />
           <button
             type="button"
             onClick={() => handleAdjustHands(1)}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
+            className="flex h-8 w-7 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
           >
             +
           </button>
