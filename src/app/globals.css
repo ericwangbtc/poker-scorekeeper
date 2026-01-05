@@ -58,8 +58,8 @@
 :root {
   --radius: 0.75rem;
   
-  /* Deep dark backgrounds - slightly lifted from 0.13/0.16 to 0.15/0.18 for better readability */
-  --background: oklch(0.15 0.02 260);
+  /* Deep dark backgrounds - darker for better contrast */
+  --background: oklch(0.13 0.02 260);
   --foreground: oklch(0.95 0.01 80);
   
   /* Elevated surfaces */
@@ -72,10 +72,10 @@
   --popover: oklch(0.18 0.02 260);
   --popover-foreground: oklch(0.95 0.01 80);
   
-  /* Gold primary - casino accent */
-  --primary: oklch(0.75 0.15 85);
+  /* Gold primary - warmer, more premium casino gold */
+  --primary: oklch(0.72 0.16 75);
   --primary-foreground: oklch(0.13 0.02 260);
-  --gold: oklch(0.75 0.15 85);
+  --gold: oklch(0.72 0.16 75);
   --gold-foreground: oklch(0.13 0.02 260);
   
   /* Secondary */
@@ -93,31 +93,31 @@
   /* Destructive */
   --destructive: oklch(0.65 0.2 25);
   
-  /* Borders and inputs */
-  --border: oklch(0.28 0.02 260);
+  /* Borders and inputs - softer to reduce grid lines */
+  --border: oklch(0.22 0.02 260);
   --input: oklch(0.22 0.02 260);
-  --ring: oklch(0.75 0.15 85);
+  --ring: oklch(0.72 0.16 75);
   
   /* Profit/Loss semantic colors */
   --profit: oklch(0.70 0.17 160);
   --loss: oklch(0.70 0.18 25);
   
   /* Chart colors */
-  --chart-1: oklch(0.75 0.15 85);
+  --chart-1: oklch(0.72 0.16 75);
   --chart-2: oklch(0.70 0.17 160);
   --chart-3: oklch(0.70 0.18 25);
   --chart-4: oklch(0.65 0.02 260);
   --chart-5: oklch(0.65 0.15 300);
   
-  /* Sidebar (not used but required) */
+  /* Sidebar */
   --sidebar: oklch(0.16 0.02 260);
   --sidebar-foreground: oklch(0.95 0.01 80);
-  --sidebar-primary: oklch(0.75 0.15 85);
+  --sidebar-primary: oklch(0.72 0.16 75);
   --sidebar-primary-foreground: oklch(0.13 0.02 260);
   --sidebar-accent: oklch(0.22 0.02 260);
   --sidebar-accent-foreground: oklch(0.95 0.01 80);
-  --sidebar-border: oklch(0.28 0.02 260);
-  --sidebar-ring: oklch(0.75 0.15 85);
+  --sidebar-border: oklch(0.22 0.02 260);
+  --sidebar-ring: oklch(0.72 0.16 75);
 }
 
 /* Force dark mode always */
@@ -173,12 +173,12 @@
   
   /* Gold gradient for premium feel */
   .gold-gradient {
-    background: linear-gradient(135deg, oklch(0.75 0.15 85), oklch(0.65 0.15 75));
+    background: linear-gradient(135deg, oklch(0.72 0.16 75), oklch(0.62 0.16 65));
   }
   
   /* Glow effects */
   .glow-gold {
-    box-shadow: 0 0 20px oklch(0.75 0.15 85 / 0.3);
+    box-shadow: 0 0 20px oklch(0.72 0.16 75 / 0.3);
   }
   
   /* Safe area for mobile */

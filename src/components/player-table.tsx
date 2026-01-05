@@ -36,7 +36,6 @@ export function PlayerTable({
 }: PlayerTableProps) {
   const toInputValue = useCallback(
     (chips: number) => {
-      if (Math.abs(chips) < 0.0001) return "";
       if (displayMode === "cash") {
         return stripTrailingZeros(chips * config.chipValue);
       }
@@ -263,7 +262,9 @@ function PlayerRow({
   const profitChips = player.currentChips - derivedBuyIn;
   const profitDisplay =
     Math.abs(profitChips) < 0.0001
-      ? ""
+      ? displayMode === "cash"
+        ? "¥0"
+        : "0"
       : displayMode === "cash"
       ? `${profitChips < 0 ? "-" : ""}¥${stripTrailingZeros(
           Math.abs(profitChips) * config.chipValue

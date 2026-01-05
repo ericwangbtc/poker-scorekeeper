@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import QRCode from "qrcode";
 import {
   Dialog,
@@ -16,17 +17,11 @@ interface QrCodeDialogProps {
   link: string;
 }
 
-export function QrCodeDialog({ open, onOpenChange, link }: QrCodeDialogProps) {
+function QrCodeDisplay({ link }: { link: string }) {
   const [qrDataUrl, setQrDataUrl] = useState<string>();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) {
-      setQrDataUrl(undefined);
-      setError(null);
-      return;
-    }
-
     let isMounted = true;
     QRCode.toDataURL(link, {
       width: 280,
@@ -45,8 +40,36 @@ export function QrCodeDialog({ open, onOpenChange, link }: QrCodeDialogProps) {
     return () => {
       isMounted = false;
     };
-  }, [link, open]);
+  }, [link]);
 
+  return (
+    <div className="flex flex-col items-center gap-4 py-4">
+      {qrDataUrl ? (
+        <Image
+          src={qrDataUrl}
+          alt="房间二维码"
+          width={224}
+          height={224}
+          className="h-56 w-56 rounded-xl border border-border p-2"
+          unoptimized
+        />
+      ) : error ? (
+        <div className="w-full rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      ) : (
+        <div className="flex h-56 w-56 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+          二维码生成中...
+        </div>
+      )}
+      <div className="w-full break-all rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground">
+        {link}
+      </div>
+    </div>
+  );
+}
+
+export function QrCodeDialog({ open, onOpenChange, link }: QrCodeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
@@ -56,26 +79,7 @@ export function QrCodeDialog({ open, onOpenChange, link }: QrCodeDialogProps) {
             扫码即可加入房间，适合现场快速分享。
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center gap-4 py-4">
-          {qrDataUrl ? (
-            <img
-              src={qrDataUrl}
-              alt="房间二维码"
-              className="h-56 w-56 rounded-xl border border-border p-2"
-            />
-          ) : error ? (
-            <div className="w-full rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {error}
-            </div>
-          ) : (
-            <div className="flex h-56 w-56 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
-              二维码生成中...
-            </div>
-          )}
-          <div className="w-full rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground break-all">
-            {link}
-          </div>
-        </div>
+        <QrCodeDisplay link={link} />
       </DialogContent>
     </Dialog>
   );

@@ -35,12 +35,6 @@ export function RoomHeader({
     <header className="sticky top-0 z-20 w-full border-b border-border/50 bg-elevated/80 px-3 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-elevated/60">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Badge
-            variant="outline"
-            className="border-primary/30 bg-primary/10 px-2.5 py-0.5 font-mono font-bold text-primary"
-          >
-            {roomId}
-          </Badge>
           <ToggleGroup
             type="single"
             value={displayMode}
@@ -63,43 +57,51 @@ export function RoomHeader({
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
-        <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onHistory}
-            disabled={disabled}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+        <div className="flex items-center gap-3">
+          <Badge
+            variant="outline"
+            className="border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary"
           >
-            <History className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onShare}
-            disabled={disabled}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onQrCode}
-            disabled={disabled}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          >
-            <QrCode className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onSettings}
-            disabled={disabled}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+            房间号 {roomId}
+          </Badge>
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onHistory}
+              disabled={disabled}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <History className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onShare}
+              disabled={disabled}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onQrCode}
+              disabled={disabled}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <QrCode className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onSettings}
+              disabled={disabled}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
       <div className="mt-2 flex items-center justify-between">

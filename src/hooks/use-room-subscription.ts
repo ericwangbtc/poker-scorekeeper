@@ -43,24 +43,19 @@ export const useRoomSubscription = (roomId?: string) => {
   const [room, setRoom] = useState<RoomData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [prevRoomId, setPrevRoomId] = useState(roomId);
 
-  useEffect(() => {
-    if (!roomId) {
-      setRoom(null);
-      setLoading(false);
-      setError("缺少房间ID");
-      return;
-    }
-
-    if (!isFirebaseConfigured) {
-      setRoom(null);
-      setLoading(false);
-      setError("Firebase 未配置，请在环境变量中添加凭证。");
-      return;
-    }
-
+  if (roomId !== prevRoomId) {
+    setPrevRoomId(roomId);
     setLoading(true);
     setError(null);
+    setRoom(null);
+  }
+
+  useEffect(() => {
+    if (!roomId || !isFirebaseConfigured) {
+      return;
+    }
 
     const unsubscribe = subscribeToRoom(
       roomId,
@@ -85,12 +80,27 @@ export const useRoomSubscription = (roomId?: string) => {
     };
   }, [roomId]);
 
-  return useMemo(
-    () => ({
+  return useMemo(() => {
+    if (!roomId) {
+      return {
+        room: null,
+        loading: false,
+        error: "缺少房间ID",
+      };
+    }
+
+    if (!isFirebaseConfigured) {
+      return {
+        room: null,
+        loading: false,
+        error: "Firebase 未配置，请在环境变量中添加凭证。",
+      };
+    }
+
+    return {
       room,
       loading,
       error,
-    }),
-    [error, loading, room]
-  );
+    };
+  }, [error, loading, room, roomId]);
 };
