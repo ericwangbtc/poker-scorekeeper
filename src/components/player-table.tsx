@@ -305,7 +305,7 @@ function PlayerRow({
         )}`;
 
   return (
-    <tr className="h-[60px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
+    <tr className="h-[48px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
       <td className="px-1.5 text-center">
         <Input
           type="text"
