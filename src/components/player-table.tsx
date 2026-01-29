@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, KeyboardEvent } from "react";
+import { useCallback, useEffect, useState, useRef, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DisplayMode, Player, RoomConfig } from "@/lib/types";
@@ -166,6 +166,7 @@ function PlayerRow({
     toInputValue(player.currentChips)
   );
   const [isEditingCurrent, setIsEditingCurrent] = useState(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setNameDraft(player.name);
@@ -180,6 +181,30 @@ function PlayerRow({
       setCurrentDraft(toInputValue(player.currentChips));
     }
   }, [isEditingCurrent, player.currentChips, toInputValue]);
+
+  // 防抖自动提交剩余筹码
+  useEffect(() => {
+    if (!isEditingCurrent) return;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      const chips = parseToChips(currentDraft);
+      if (chips === null) return;
+      if (Math.abs(chips - player.currentChips) < 0.0001) return;
+      onCurrentCommit(player, chips).catch(() => {
+        setCurrentDraft(toInputValue(player.currentChips));
+      });
+    }, 800);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [currentDraft, isEditingCurrent, parseToChips, player, onCurrentCommit, toInputValue]);
 
   const derivedBuyIn = player.buyInOverride
     ? player.buyInChips
@@ -214,6 +239,12 @@ function PlayerRow({
   };
 
   const commitCurrent = async () => {
+    // 清除防抖定时器，避免重复提交
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
     const chips = parseToChips(currentDraft);
     if (chips === null) {
       setCurrentDraft(toInputValue(player.currentChips));
@@ -331,6 +362,10 @@ function PlayerRow({
           onKeyDown={(e) => {
             if (e.key === "Enter") e.currentTarget.blur();
             if (e.key === "Escape") {
+              if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+                debounceTimerRef.current = null;
+              }
               setCurrentDraft(toInputValue(player.currentChips));
               setIsEditingCurrent(false);
               e.currentTarget.blur();
