@@ -1,4 +1,4 @@
-import { Player } from "./types";
+import type { Player } from "./types.ts";
 
 const isNearlyZero = (value: number) => Math.abs(value) < 0.0001;
 
