@@ -14,7 +14,7 @@
 1. 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
 2. 配置环境变量（复制 `.env.example` 到 `.env.local`）
@@ -26,18 +26,18 @@ cp .env.example .env.local
 3. 启动开发服务器
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 访问 `http://localhost:3000`。
 
 ## 脚本
 
-- `npm run dev`: 启动开发环境
-- `npm run lint`: 运行 ESLint
-- `npm test`: 运行 Node 内置测试
-- `npm run build`: 生产构建
-- `npm run start`: 启动生产服务
+- `pnpm dev`: 启动开发环境
+- `pnpm lint`: 运行 ESLint
+- `pnpm test`: 运行 Node 内置测试
+- `pnpm build`: 生产构建
+- `pnpm start`: 启动生产服务
 
 ## 环境变量
 
