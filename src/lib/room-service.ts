@@ -173,6 +173,31 @@ export const updateRoomConfig = async (
   await update(ref(db), payload);
 };
 
+export const saveRoomSettings = async (
+  roomId: string,
+  values: { chipsPerHand: number; chipValue: number },
+  players: Player[],
+  previousChipsPerHand: number
+) => {
+  const db = ensureDatabase();
+  const payload: Record<string, unknown> = {
+    [buildRoomPath(roomId, "updatedAt")]: now(),
+    [buildRoomPath(roomId, "config/chipsPerHand")]: values.chipsPerHand,
+    [buildRoomPath(roomId, "config/chipValue")]: values.chipValue,
+  };
+
+  if (values.chipsPerHand !== previousChipsPerHand) {
+    players
+      .filter((player) => !player.buyInOverride)
+      .forEach((player) => {
+        payload[buildRoomPath(roomId, `players/${player.id}/buyInChips`)] =
+          player.hands * values.chipsPerHand;
+      });
+  }
+
+  await update(ref(db), payload);
+};
+
 export const updatePlayer = async (
   roomId: string,
   playerId: string,

@@ -7,8 +7,8 @@ import {
   addPlayer,
   createRoom,
   deletePlayer,
+  saveRoomSettings,
   updatePlayer,
-  updateRoomConfig,
 } from "@/lib/room-service";
 import { createHistoryEntry } from "@/lib/id";
 import { DisplayMode, Player } from "@/lib/types";
@@ -149,24 +149,12 @@ export default function RoomPage() {
     chipValue: number;
   }) => {
     if (!roomId || !room) throw new Error("房间信息尚未加载");
-    const { chipsPerHand, chipValue } = values;
-    const updates: Promise<unknown>[] = [
-      updateRoomConfig(roomId, { chipsPerHand, chipValue }),
-    ];
-
-    if (chipsPerHand !== room.config.chipsPerHand) {
-      room.players
-        .filter((player) => !player.buyInOverride)
-        .forEach((player) => {
-          updates.push(
-            updatePlayer(roomId, player.id, {
-              buyInChips: player.hands * chipsPerHand,
-            })
-          );
-        });
-    }
-
-    await Promise.all(updates);
+    await saveRoomSettings(
+      roomId,
+      values,
+      room.players,
+      room.config.chipsPerHand
+    );
     toast.success("房间设置已更新");
   };
 
