@@ -1,9 +1,8 @@
 import {
-  get,
   onValue,
   ref,
   remove,
-  set,
+  runTransaction,
   Unsubscribe,
   update,
 } from "firebase/database";
@@ -122,9 +121,12 @@ export const createRoom = async (name?: string) => {
   while (attempts < maxAttempts) {
     roomId = generateRoomId();
     const roomRef = ref(db, buildRoomPath(roomId));
-    const snapshot = await get(roomRef);
-    if (!snapshot.exists()) {
-      await set(roomRef, roomPayload);
+    const result = await runTransaction(
+      roomRef,
+      (current) => (current === null ? roomPayload : undefined),
+      { applyLocally: false }
+    );
+    if (result.committed) {
       return roomId;
     }
     attempts += 1;
