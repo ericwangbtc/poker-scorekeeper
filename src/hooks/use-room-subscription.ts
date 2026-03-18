@@ -40,17 +40,17 @@ const toRoomData = (roomId: string, snapshot: RoomSnapshot): RoomData => {
 };
 
 export const useRoomSubscription = (roomId?: string) => {
-  const [room, setRoom] = useState<RoomData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [prevRoomId, setPrevRoomId] = useState(roomId);
-
-  if (roomId !== prevRoomId) {
-    setPrevRoomId(roomId);
-    setLoading(true);
-    setError(null);
-    setRoom(null);
-  }
+  const [snapshotState, setSnapshotState] = useState<{
+    roomId: string | null;
+    room: RoomData | null;
+    error: string | null;
+    resolved: boolean;
+  }>({
+    roomId: null,
+    room: null,
+    error: null,
+    resolved: false,
+  });
 
   useEffect(() => {
     if (!roomId || !isFirebaseConfigured) {
@@ -61,17 +61,28 @@ export const useRoomSubscription = (roomId?: string) => {
       roomId,
       (snapshot) => {
         if (!snapshot) {
-          setRoom(null);
-          setError("房间不存在或已被删除。");
+          setSnapshotState({
+            roomId,
+            room: null,
+            error: "房间不存在或已被删除。",
+            resolved: true,
+          });
         } else {
-          setRoom(toRoomData(roomId, snapshot));
-          setError(null);
+          setSnapshotState({
+            roomId,
+            room: toRoomData(roomId, snapshot),
+            error: null,
+            resolved: true,
+          });
         }
-        setLoading(false);
       },
       (err) => {
-        setError(err.message);
-        setLoading(false);
+        setSnapshotState({
+          roomId,
+          room: null,
+          error: err.message,
+          resolved: true,
+        });
       }
     );
 
@@ -97,10 +108,18 @@ export const useRoomSubscription = (roomId?: string) => {
       };
     }
 
+    if (snapshotState.roomId !== roomId) {
+      return {
+        room: null,
+        loading: true,
+        error: null,
+      };
+    }
+
     return {
-      room,
-      loading,
-      error,
+      room: snapshotState.room,
+      loading: !snapshotState.resolved,
+      error: snapshotState.error,
     };
-  }, [error, loading, room, roomId]);
+  }, [roomId, snapshotState]);
 };
