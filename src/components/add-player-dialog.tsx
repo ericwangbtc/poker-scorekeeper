@@ -25,13 +25,16 @@ export function AddPlayerDialog({
 }: AddPlayerDialogProps) {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
+      setError(null);
       setTimeout(() => inputRef.current?.focus(), 0);
     } else {
       setName("");
+      setError(null);
     }
   }, [open]);
 
@@ -42,8 +45,10 @@ export function AddPlayerDialog({
       setIsSubmitting(true);
       await onSubmit(trimmed);
       setName("");
+      setError(null);
       onOpenChange(false);
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "添加玩家失败，请重试。");
     } finally {
       setIsSubmitting(false);
     }
@@ -75,6 +80,11 @@ export function AddPlayerDialog({
             disabled={isSubmitting}
           />
         </div>
+        {error && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
         <DialogFooter>
           <Button
             variant="outline"
