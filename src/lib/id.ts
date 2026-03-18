@@ -1,10 +1,11 @@
 import { HistoryEntry } from "./types";
+import { ROOM_ID_LENGTH } from "./constants";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export const generateRoomId = () => {
   let result = "";
-  for (let i = 0; i < 6; i += 1) {
+  for (let i = 0; i < ROOM_ID_LENGTH; i += 1) {
     const index = Math.floor(Math.random() * LETTERS.length);
     result += LETTERS[index];
   }
