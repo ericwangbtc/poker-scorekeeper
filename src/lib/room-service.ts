@@ -1,7 +1,6 @@
 import {
   onValue,
   ref,
-  remove,
   runTransaction,
   Unsubscribe,
   update,
@@ -224,10 +223,16 @@ export const updatePlayer = async (
   await update(ref(db), payload);
 };
 
-export const deletePlayer = async (roomId: string, playerId: string) => {
+export const deletePlayer = async (
+  roomId: string,
+  playerId: string,
+  playerName: string
+) => {
   const db = ensureDatabase();
-  await remove(ref(db, buildRoomPath(roomId, `players/${playerId}`)));
+  const historyEntry = createHistoryEntry(`${playerName} 离开了房间`);
   await update(ref(db), {
+    [buildRoomPath(roomId, `players/${playerId}`)]: null,
     [buildRoomPath(roomId, "updatedAt")]: now(),
+    [buildHistoryPath(roomId, historyEntry.id)]: historyEntry,
   });
 };

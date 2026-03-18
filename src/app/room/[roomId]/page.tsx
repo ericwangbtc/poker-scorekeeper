@@ -92,7 +92,7 @@ export default function RoomPage() {
   const handleDeletePlayer = async () => {
     if (!roomId || !deleteTarget) return;
     try {
-      await deletePlayer(roomId, deleteTarget.id);
+      await deletePlayer(roomId, deleteTarget.id, deleteTarget.name);
       setDeleteTarget(null);
       toast.success("玩家已删除");
     } catch (err) {
