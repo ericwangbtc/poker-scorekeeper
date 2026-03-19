@@ -18,6 +18,7 @@ import { HistoryEntry, Player, RoomConfig, RoomSnapshot } from "./types";
 import { generatePlayerId, generateRoomId } from "./id";
 import { createHistoryEntry } from "./history";
 import { database } from "./firebase";
+import { buildHistoryPath, buildRoomPath } from "./room-paths";
 
 const ensureDatabase = () => {
   if (!database) {
@@ -25,12 +26,6 @@ const ensureDatabase = () => {
   }
   return database;
 };
-
-const buildRoomPath = (roomId: string, path = "") =>
-  path ? `rooms/${roomId}/${path}` : `rooms/${roomId}`;
-
-const buildHistoryPath = (roomId: string, entryId: string) =>
-  `roomHistory/${roomId}/${entryId}`;
 
 const DEFAULT_HISTORY_LIMIT = 200;
 
@@ -69,7 +64,7 @@ export const subscribeToRoomHistory = (
 ): Unsubscribe => {
   const db = ensureDatabase();
   const historyRef = query(
-    ref(db, `roomHistory/${roomId}`),
+    ref(db, buildRoomPath(roomId, "history")),
     orderByChild("timestamp"),
     limitToLast(limit)
   );
