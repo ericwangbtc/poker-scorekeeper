@@ -78,7 +78,7 @@ export function SettingsSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl"
+        className="max-h-[85vh]"
         onOpenAutoFocus={preventDialogInputAutoFocus}
       >
         <SheetHeader>

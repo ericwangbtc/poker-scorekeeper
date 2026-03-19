@@ -14,6 +14,10 @@ import {
 } from "@/lib/history";
 import { HistoryEntry } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import {
+  HISTORY_GROUP_HEADER_CLASS,
+  HISTORY_TIME_LABEL_CLASS,
+} from "@/lib/sheet-ui";
 
 interface HistorySheetProps {
   open: boolean;
@@ -57,7 +61,7 @@ const HistoryRow = memo(function HistoryRow({ item }: { item: GroupedHistoryItem
               {description.value}
             </span>
           ) : null}
-          <span className="text-[10px] text-muted-foreground/80 tabular-nums">
+          <span className={HISTORY_TIME_LABEL_CLASS}>
             {item.relativeLabel} · {item.timeLabel}
           </span>
         </div>
@@ -82,7 +86,7 @@ export function HistorySheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[85vh] rounded-t-2xl border-border/50 bg-elevated/95 backdrop-blur-xl"
+        className="max-h-[85vh]"
       >
         <SheetHeader className="mb-4">
           <SheetTitle>历史记录</SheetTitle>
@@ -96,7 +100,7 @@ export function HistorySheet({
             <div className="space-y-4 pb-8">
               {groupedEntries.map((section) => (
                 <section key={section.key}>
-                  <div className="mb-2 px-2 text-[11px] font-medium text-muted-foreground/80">
+                  <div className={HISTORY_GROUP_HEADER_CLASS}>
                     {section.label}
                   </div>
                   <ul className="relative ml-2 space-y-0 border-l border-border/50">
