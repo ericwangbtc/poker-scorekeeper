@@ -87,7 +87,7 @@ export function SettingsSheet({
             调整筹码配置，所有成员实时同步。
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4 px-4">
           <div className="flex flex-col gap-2">
             <label
               htmlFor="chipsPerHand"

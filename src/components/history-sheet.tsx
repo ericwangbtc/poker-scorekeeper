@@ -91,7 +91,7 @@ export function HistorySheet({
         <SheetHeader className="mb-4">
           <SheetTitle>历史记录</SheetTitle>
         </SheetHeader>
-        <div className="max-h-[70vh] overflow-y-auto pl-2 pr-1">
+        <div className="max-h-[70vh] overflow-y-auto px-4">
           {entries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               暂无历史记录。
