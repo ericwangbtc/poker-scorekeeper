@@ -10,7 +10,7 @@ import {
   saveRoomSettings,
   updatePlayer,
 } from "@/lib/room-service";
-import { createHistoryEntry } from "@/lib/id";
+import { createHistoryEntry } from "@/lib/history";
 import { DisplayMode, Player } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -102,18 +102,6 @@ export default function RoomPage() {
     }
   };
 
-  const buildHandsHistoryMessage = (
-    playerName: string,
-    diff: number,
-    newHands: number
-  ) => {
-    const absDiff = Math.abs(diff);
-    if (absDiff === 0) return null;
-    const diffLabel = diff > 0 ? "增加" : "减少";
-    const currentLabel = absDiff === 1 ? `（当前 ${newHands} 手）` : "";
-    return `${playerName} ${diffLabel}了 ${absDiff} 手${currentLabel}`;
-  };
-
   const commitHands = async (player: Player, hands: number) => {
     if (!roomId || !room) throw new Error("房间信息尚未加载");
     const rounded = Math.round(hands);
@@ -123,8 +111,16 @@ export default function RoomPage() {
       buyInOverride: false,
     };
     const diff = rounded - player.hands;
-    const message = buildHandsHistoryMessage(player.name, diff, rounded);
-    const historyEntry = message ? createHistoryEntry(message) : undefined;
+    const historyEntry =
+      diff === 0
+        ? undefined
+        : createHistoryEntry({
+            type: "hands_adjusted",
+            actorId: player.id,
+            actorName: player.name,
+            handsDelta: diff,
+            handsTotal: rounded,
+          });
     await updatePlayer(roomId, player.id, updates, historyEntry);
   };
 

@@ -17,16 +17,24 @@ export interface Player {
   buyInOverride?: boolean;
 }
 
+export type HistoryEventType =
+  | "player_joined"
+  | "player_left"
+  | "hands_adjusted";
+
 export interface HistoryEntry {
   id: string;
-  message: string;
   timestamp: number;
+  type: HistoryEventType;
+  actorId?: string;
+  actorName: string;
+  handsDelta?: number;
+  handsTotal?: number;
 }
 
 export interface RoomSnapshot {
   config?: RoomConfig;
   players?: Record<string, Player>;
-  history?: Record<string, HistoryEntry>;
   updatedAt?: number;
   expiresAt?: number;
 }

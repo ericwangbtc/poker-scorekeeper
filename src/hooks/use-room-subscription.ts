@@ -5,8 +5,11 @@ import { isFirebaseConfigured } from "@/lib/firebase";
 import {
   createDefaultRoomConfig,
   subscribeToRoom,
+  subscribeToRoomHistory,
 } from "@/lib/room-service";
 import { HistoryEntry, Player, RoomData, RoomSnapshot } from "@/lib/types";
+
+type CoreRoomData = Omit<RoomData, "history">;
 
 const normalizePlayers = (playersRecord?: Record<string, Player>) => {
   if (!playersRecord) {
@@ -20,20 +23,12 @@ const normalizePlayers = (playersRecord?: Record<string, Player>) => {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 };
 
-const normalizeHistory = (historyRecord?: Record<string, HistoryEntry>) => {
-  if (!historyRecord) {
-    return [];
-  }
-  return Object.values(historyRecord).sort((a, b) => b.timestamp - a.timestamp);
-};
-
-const toRoomData = (roomId: string, snapshot: RoomSnapshot): RoomData => {
+const toCoreRoomData = (roomId: string, snapshot: RoomSnapshot): CoreRoomData => {
   const config = snapshot.config ?? createDefaultRoomConfig();
   return {
     id: roomId,
     config,
     players: normalizePlayers(snapshot.players),
-    history: normalizeHistory(snapshot.history),
     updatedAt: snapshot.updatedAt ?? Date.now(),
     expiresAt: snapshot.expiresAt,
   };
@@ -42,7 +37,7 @@ const toRoomData = (roomId: string, snapshot: RoomSnapshot): RoomData => {
 export const useRoomSubscription = (roomId?: string) => {
   const [snapshotState, setSnapshotState] = useState<{
     roomId: string | null;
-    room: RoomData | null;
+    room: CoreRoomData | null;
     error: string | null;
     resolved: boolean;
   }>({
@@ -50,6 +45,13 @@ export const useRoomSubscription = (roomId?: string) => {
     room: null,
     error: null,
     resolved: false,
+  });
+  const [historyState, setHistoryState] = useState<{
+    roomId: string | null;
+    entries: HistoryEntry[];
+  }>({
+    roomId: null,
+    entries: [],
   });
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export const useRoomSubscription = (roomId?: string) => {
     const unsubscribe = subscribeToRoom(
       roomId,
       (snapshot) => {
-        if (!snapshot) {
+        if (!snapshot || !snapshot.config) {
           setSnapshotState({
             roomId,
             room: null,
@@ -70,7 +72,7 @@ export const useRoomSubscription = (roomId?: string) => {
         } else {
           setSnapshotState({
             roomId,
-            room: toRoomData(roomId, snapshot),
+            room: toCoreRoomData(roomId, snapshot),
             error: null,
             resolved: true,
           });
@@ -83,6 +85,29 @@ export const useRoomSubscription = (roomId?: string) => {
           error: err.message,
           resolved: true,
         });
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [roomId]);
+
+  useEffect(() => {
+    if (!roomId || !isFirebaseConfigured) {
+      return;
+    }
+
+    const unsubscribe = subscribeToRoomHistory(
+      roomId,
+      (entries) => {
+        setHistoryState({
+          roomId,
+          entries,
+        });
+      },
+      (err) => {
+        console.error(err);
       }
     );
 
@@ -116,10 +141,20 @@ export const useRoomSubscription = (roomId?: string) => {
       };
     }
 
+    const historyEntries =
+      historyState.roomId === roomId ? historyState.entries : [];
+
+    const room = snapshotState.room
+      ? {
+          ...snapshotState.room,
+          history: historyEntries,
+        }
+      : null;
+
     return {
-      room: snapshotState.room,
+      room,
       loading: !snapshotState.resolved,
       error: snapshotState.error,
     };
-  }, [roomId, snapshotState]);
+  }, [historyState, roomId, snapshotState]);
 };

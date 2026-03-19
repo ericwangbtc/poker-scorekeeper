@@ -1,4 +1,3 @@
-import { HistoryEntry } from "./types";
 import { ROOM_ID_LENGTH } from "./constants";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -24,12 +23,3 @@ export const generateHistoryId = (timestamp?: number) => {
   const randomPortion = Math.random().toString(36).slice(2, 8);
   return `history_${timePortion}_${randomPortion}`;
 };
-
-export const createHistoryEntry = (
-  message: string,
-  timestamp = Date.now()
-): HistoryEntry => ({
-  id: generateHistoryId(timestamp),
-  message,
-  timestamp,
-});
