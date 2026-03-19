@@ -7,10 +7,10 @@ import {
   addPlayer,
   createRoom,
   deletePlayer,
+  saveRoomSettings,
   updatePlayer,
-  updateRoomConfig,
 } from "@/lib/room-service";
-import { createHistoryEntry } from "@/lib/id";
+import { createHistoryEntry } from "@/lib/history";
 import { DisplayMode, Player } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -92,7 +92,7 @@ export default function RoomPage() {
   const handleDeletePlayer = async () => {
     if (!roomId || !deleteTarget) return;
     try {
-      await deletePlayer(roomId, deleteTarget.id);
+      await deletePlayer(roomId, deleteTarget.id, deleteTarget.name);
       setDeleteTarget(null);
       toast.success("玩家已删除");
     } catch (err) {
@@ -100,18 +100,6 @@ export default function RoomPage() {
         err instanceof Error ? err.message : "删除失败，请稍后再试。";
       toast.error(message);
     }
-  };
-
-  const buildHandsHistoryMessage = (
-    playerName: string,
-    diff: number,
-    newHands: number
-  ) => {
-    const absDiff = Math.abs(diff);
-    if (absDiff === 0) return null;
-    const diffLabel = diff > 0 ? "增加" : "减少";
-    const currentLabel = absDiff === 1 ? `（当前 ${newHands} 手）` : "";
-    return `${playerName} ${diffLabel}了 ${absDiff} 手${currentLabel}`;
   };
 
   const commitHands = async (player: Player, hands: number) => {
@@ -123,8 +111,16 @@ export default function RoomPage() {
       buyInOverride: false,
     };
     const diff = rounded - player.hands;
-    const message = buildHandsHistoryMessage(player.name, diff, rounded);
-    const historyEntry = message ? createHistoryEntry(message) : undefined;
+    const historyEntry =
+      diff === 0
+        ? undefined
+        : createHistoryEntry({
+            type: "hands_adjusted",
+            actorId: player.id,
+            actorName: player.name,
+            handsDelta: diff,
+            handsTotal: rounded,
+          });
     await updatePlayer(roomId, player.id, updates, historyEntry);
   };
 
@@ -149,24 +145,12 @@ export default function RoomPage() {
     chipValue: number;
   }) => {
     if (!roomId || !room) throw new Error("房间信息尚未加载");
-    const { chipsPerHand, chipValue } = values;
-    const updates: Promise<unknown>[] = [
-      updateRoomConfig(roomId, { chipsPerHand, chipValue }),
-    ];
-
-    if (chipsPerHand !== room.config.chipsPerHand) {
-      room.players
-        .filter((player) => !player.buyInOverride)
-        .forEach((player) => {
-          updates.push(
-            updatePlayer(roomId, player.id, {
-              buyInChips: player.hands * chipsPerHand,
-            })
-          );
-        });
-    }
-
-    await Promise.all(updates);
+    await saveRoomSettings(
+      roomId,
+      values,
+      room.players,
+      room.config.chipsPerHand
+    );
     toast.success("房间设置已更新");
   };
 

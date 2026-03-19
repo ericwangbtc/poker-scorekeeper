@@ -1,9 +1,10 @@
 import {
-  get,
+  limitToLast,
   onValue,
+  orderByChild,
+  query,
   ref,
-  remove,
-  set,
+  runTransaction,
   Unsubscribe,
   update,
 } from "firebase/database";
@@ -14,7 +15,8 @@ import {
   MILLISECONDS_IN_DAY,
 } from "./constants";
 import { HistoryEntry, Player, RoomConfig, RoomSnapshot } from "./types";
-import { createHistoryEntry, generatePlayerId, generateRoomId } from "./id";
+import { generatePlayerId, generateRoomId } from "./id";
+import { createHistoryEntry } from "./history";
 import { database } from "./firebase";
 
 const ensureDatabase = () => {
@@ -28,7 +30,9 @@ const buildRoomPath = (roomId: string, path = "") =>
   path ? `rooms/${roomId}/${path}` : `rooms/${roomId}`;
 
 const buildHistoryPath = (roomId: string, entryId: string) =>
-  buildRoomPath(roomId, `history/${entryId}`);
+  `roomHistory/${roomId}/${entryId}`;
+
+const DEFAULT_HISTORY_LIMIT = 200;
 
 export const subscribeToRoom = (
   roomId: string,
@@ -42,13 +46,46 @@ export const subscribeToRoom = (
     (snapshot) => {
       const value = snapshot.val() as RoomSnapshot | null;
       if (value) {
-        onSnapshot({
-          ...value,
-          players: value.players || undefined,
-        });
+        onSnapshot(value);
       } else {
         onSnapshot(null);
       }
+    },
+    (error) => {
+      if (onError) {
+        onError(error);
+      } else {
+        console.error(error);
+      }
+    }
+  );
+};
+
+export const subscribeToRoomHistory = (
+  roomId: string,
+  onSnapshot: (entries: HistoryEntry[]) => void,
+  onError?: (error: Error) => void,
+  limit = DEFAULT_HISTORY_LIMIT
+): Unsubscribe => {
+  const db = ensureDatabase();
+  const historyRef = query(
+    ref(db, `roomHistory/${roomId}`),
+    orderByChild("timestamp"),
+    limitToLast(limit)
+  );
+
+  return onValue(
+    historyRef,
+    (snapshot) => {
+      const value = snapshot.val() as Record<string, HistoryEntry> | null;
+      if (!value) {
+        onSnapshot([]);
+        return;
+      }
+      const entries = Object.values(value).sort(
+        (a, b) => b.timestamp - a.timestamp || b.id.localeCompare(a.id)
+      );
+      onSnapshot(entries);
     },
     (error) => {
       if (onError) {
@@ -90,22 +127,22 @@ export const createRoom = async (name?: string) => {
   let roomId = "";
   const config = createDefaultRoomConfig();
   const players: Record<string, Player> = {};
-  const history: Record<string, HistoryEntry> = {};
+  let initialHistoryEntry: HistoryEntry | undefined;
 
   if (name && name.trim()) {
     const initialPlayer = computeInitialPlayer(config, name.trim());
     players[initialPlayer.id] = initialPlayer;
-    const entry = createHistoryEntry(
-      `${initialPlayer.name} 加入了房间`,
-      config.createdAt
-    );
-    history[entry.id] = entry;
+    initialHistoryEntry = createHistoryEntry({
+      type: "player_joined",
+      actorId: initialPlayer.id,
+      actorName: initialPlayer.name,
+      timestamp: config.createdAt,
+    });
   }
 
   const roomPayload: {
     config: RoomConfig;
     players: Record<string, Player>;
-    history?: Record<string, HistoryEntry>;
     updatedAt: number;
     expiresAt: number;
   } = {
@@ -115,16 +152,20 @@ export const createRoom = async (name?: string) => {
     expiresAt: config.createdAt + DAYS_TO_EXPIRE * MILLISECONDS_IN_DAY,
   };
 
-  if (Object.keys(history).length > 0) {
-    roomPayload.history = history;
-  }
-
   while (attempts < maxAttempts) {
     roomId = generateRoomId();
     const roomRef = ref(db, buildRoomPath(roomId));
-    const snapshot = await get(roomRef);
-    if (!snapshot.exists()) {
-      await set(roomRef, roomPayload);
+    const result = await runTransaction(
+      roomRef,
+      (current) => (current === null ? roomPayload : undefined),
+      { applyLocally: false }
+    );
+    if (result.committed) {
+      if (initialHistoryEntry) {
+        await update(ref(db), {
+          [buildHistoryPath(roomId, initialHistoryEntry.id)]: initialHistoryEntry,
+        });
+      }
       return roomId;
     }
     attempts += 1;
@@ -150,7 +191,11 @@ export const addPlayer = async (
     [buildRoomPath(roomId, `players/${player.id}`)]: player,
     [buildRoomPath(roomId, "updatedAt")]: now(),
   };
-  const historyEntry = createHistoryEntry(`${player.name} 加入了房间`);
+  const historyEntry = createHistoryEntry({
+    type: "player_joined",
+    actorId: player.id,
+    actorName: player.name,
+  });
   updates[buildHistoryPath(roomId, historyEntry.id)] = historyEntry;
   await update(ref(db), updates);
 };
@@ -169,6 +214,31 @@ export const updateRoomConfig = async (
       payload[buildRoomPath(roomId, `config/${key}`)] = value;
     }
   });
+
+  await update(ref(db), payload);
+};
+
+export const saveRoomSettings = async (
+  roomId: string,
+  values: { chipsPerHand: number; chipValue: number },
+  players: Player[],
+  previousChipsPerHand: number
+) => {
+  const db = ensureDatabase();
+  const payload: Record<string, unknown> = {
+    [buildRoomPath(roomId, "updatedAt")]: now(),
+    [buildRoomPath(roomId, "config/chipsPerHand")]: values.chipsPerHand,
+    [buildRoomPath(roomId, "config/chipValue")]: values.chipValue,
+  };
+
+  if (values.chipsPerHand !== previousChipsPerHand) {
+    players
+      .filter((player) => !player.buyInOverride)
+      .forEach((player) => {
+        payload[buildRoomPath(roomId, `players/${player.id}/buyInChips`)] =
+          player.hands * values.chipsPerHand;
+      });
+  }
 
   await update(ref(db), payload);
 };
@@ -197,10 +267,20 @@ export const updatePlayer = async (
   await update(ref(db), payload);
 };
 
-export const deletePlayer = async (roomId: string, playerId: string) => {
+export const deletePlayer = async (
+  roomId: string,
+  playerId: string,
+  playerName: string
+) => {
   const db = ensureDatabase();
-  await remove(ref(db, buildRoomPath(roomId, `players/${playerId}`)));
+  const historyEntry = createHistoryEntry({
+    type: "player_left",
+    actorId: playerId,
+    actorName: playerName,
+  });
   await update(ref(db), {
+    [buildRoomPath(roomId, `players/${playerId}`)]: null,
     [buildRoomPath(roomId, "updatedAt")]: now(),
+    [buildHistoryPath(roomId, historyEntry.id)]: historyEntry,
   });
 };

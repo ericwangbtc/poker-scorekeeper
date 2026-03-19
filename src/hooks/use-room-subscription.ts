@@ -5,8 +5,11 @@ import { isFirebaseConfigured } from "@/lib/firebase";
 import {
   createDefaultRoomConfig,
   subscribeToRoom,
+  subscribeToRoomHistory,
 } from "@/lib/room-service";
 import { HistoryEntry, Player, RoomData, RoomSnapshot } from "@/lib/types";
+
+type CoreRoomData = Omit<RoomData, "history">;
 
 const normalizePlayers = (playersRecord?: Record<string, Player>) => {
   if (!playersRecord) {
@@ -20,37 +23,36 @@ const normalizePlayers = (playersRecord?: Record<string, Player>) => {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 };
 
-const normalizeHistory = (historyRecord?: Record<string, HistoryEntry>) => {
-  if (!historyRecord) {
-    return [];
-  }
-  return Object.values(historyRecord).sort((a, b) => b.timestamp - a.timestamp);
-};
-
-const toRoomData = (roomId: string, snapshot: RoomSnapshot): RoomData => {
+const toCoreRoomData = (roomId: string, snapshot: RoomSnapshot): CoreRoomData => {
   const config = snapshot.config ?? createDefaultRoomConfig();
   return {
     id: roomId,
     config,
     players: normalizePlayers(snapshot.players),
-    history: normalizeHistory(snapshot.history),
     updatedAt: snapshot.updatedAt ?? Date.now(),
     expiresAt: snapshot.expiresAt,
   };
 };
 
 export const useRoomSubscription = (roomId?: string) => {
-  const [room, setRoom] = useState<RoomData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [prevRoomId, setPrevRoomId] = useState(roomId);
-
-  if (roomId !== prevRoomId) {
-    setPrevRoomId(roomId);
-    setLoading(true);
-    setError(null);
-    setRoom(null);
-  }
+  const [snapshotState, setSnapshotState] = useState<{
+    roomId: string | null;
+    room: CoreRoomData | null;
+    error: string | null;
+    resolved: boolean;
+  }>({
+    roomId: null,
+    room: null,
+    error: null,
+    resolved: false,
+  });
+  const [historyState, setHistoryState] = useState<{
+    roomId: string | null;
+    entries: HistoryEntry[];
+  }>({
+    roomId: null,
+    entries: [],
+  });
 
   useEffect(() => {
     if (!roomId || !isFirebaseConfigured) {
@@ -60,18 +62,52 @@ export const useRoomSubscription = (roomId?: string) => {
     const unsubscribe = subscribeToRoom(
       roomId,
       (snapshot) => {
-        if (!snapshot) {
-          setRoom(null);
-          setError("房间不存在或已被删除。");
+        if (!snapshot || !snapshot.config) {
+          setSnapshotState({
+            roomId,
+            room: null,
+            error: "房间不存在或已被删除。",
+            resolved: true,
+          });
         } else {
-          setRoom(toRoomData(roomId, snapshot));
-          setError(null);
+          setSnapshotState({
+            roomId,
+            room: toCoreRoomData(roomId, snapshot),
+            error: null,
+            resolved: true,
+          });
         }
-        setLoading(false);
       },
       (err) => {
-        setError(err.message);
-        setLoading(false);
+        setSnapshotState({
+          roomId,
+          room: null,
+          error: err.message,
+          resolved: true,
+        });
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [roomId]);
+
+  useEffect(() => {
+    if (!roomId || !isFirebaseConfigured) {
+      return;
+    }
+
+    const unsubscribe = subscribeToRoomHistory(
+      roomId,
+      (entries) => {
+        setHistoryState({
+          roomId,
+          entries,
+        });
+      },
+      (err) => {
+        console.error(err);
       }
     );
 
@@ -97,10 +133,28 @@ export const useRoomSubscription = (roomId?: string) => {
       };
     }
 
+    if (snapshotState.roomId !== roomId) {
+      return {
+        room: null,
+        loading: true,
+        error: null,
+      };
+    }
+
+    const historyEntries =
+      historyState.roomId === roomId ? historyState.entries : [];
+
+    const room = snapshotState.room
+      ? {
+          ...snapshotState.room,
+          history: historyEntries,
+        }
+      : null;
+
     return {
       room,
-      loading,
-      error,
+      loading: !snapshotState.resolved,
+      error: snapshotState.error,
     };
-  }, [error, loading, room, roomId]);
+  }, [historyState, roomId, snapshotState]);
 };
