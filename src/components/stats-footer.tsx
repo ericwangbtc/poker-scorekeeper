@@ -59,16 +59,11 @@ export function StatsFooter({
   );
   const deltaLabel = formatDelta(totals.delta, displayMode, config.chipValue);
 
-  const discrepancyLabel =
-    displayMode === "cash"
-      ? `¥${stripTrailingZeros(Math.abs(totals.delta) * config.chipValue)}`
-      : stripTrailingZeros(Math.abs(totals.delta));
-
   const statusText = totals.isBalanced
     ? "✓ 账目平衡"
     : totals.delta > 0
-    ? `多 ${discrepancyLabel}`
-    : `少 ${discrepancyLabel}`;
+    ? "水上多赢"
+    : "水上少赢";
 
   return (
     <footer className="fixed bottom-0 inset-x-0 z-20 border-t border-border/50 bg-elevated/80 backdrop-blur-xl safe-area-bottom supports-[backdrop-filter]:bg-elevated/60">
