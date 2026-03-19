@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { preventDialogInputAutoFocus } from "@/lib/dialog-focus";
 
 interface SettingsSheetProps {
   open: boolean;
@@ -75,7 +76,11 @@ export function SettingsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl"
+        onOpenAutoFocus={preventDialogInputAutoFocus}
+      >
         <SheetHeader>
           <SheetTitle>房间设置</SheetTitle>
           <SheetDescription>
