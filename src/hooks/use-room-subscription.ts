@@ -29,6 +29,8 @@ const toCoreRoomData = (roomId: string, snapshot: RoomSnapshot): CoreRoomData =>
     id: roomId,
     config,
     players: normalizePlayers(snapshot.players),
+    hostClientId: snapshot.hostClientId ?? "",
+    hostPin: snapshot.hostPin ?? "",
     updatedAt: snapshot.updatedAt ?? Date.now(),
     expiresAt: snapshot.expiresAt,
   };

@@ -115,7 +115,10 @@ const computeInitialPlayer = (config: RoomConfig, name: string): Player => {
   };
 };
 
-export const createRoom = async (name?: string) => {
+export const createRoom = async (
+  name?: string,
+  options?: { hostClientId?: string; hostPin?: string }
+) => {
   const db = ensureDatabase();
   let attempts = 0;
   const maxAttempts = 10;
@@ -138,11 +141,15 @@ export const createRoom = async (name?: string) => {
   const roomPayload: {
     config: RoomConfig;
     players: Record<string, Player>;
+    hostClientId: string;
+    hostPin: string;
     updatedAt: number;
     expiresAt: number;
   } = {
     config,
     players,
+    hostClientId: options?.hostClientId ?? "",
+    hostPin: options?.hostPin ?? "",
     updatedAt: config.createdAt,
     expiresAt: config.createdAt + DAYS_TO_EXPIRE * MILLISECONDS_IN_DAY,
   };
@@ -277,5 +284,13 @@ export const deletePlayer = async (
     [buildRoomPath(roomId, `players/${playerId}`)]: null,
     [buildRoomPath(roomId, "updatedAt")]: now(),
     [buildHistoryPath(roomId, historyEntry.id)]: historyEntry,
+  });
+};
+
+export const claimRoomHost = async (roomId: string, hostClientId: string) => {
+  const db = ensureDatabase();
+  await update(ref(db), {
+    [buildRoomPath(roomId, "hostClientId")]: hostClientId,
+    [buildRoomPath(roomId, "updatedAt")]: now(),
   });
 };

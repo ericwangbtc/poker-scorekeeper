@@ -10,6 +10,7 @@ interface PlayerTableProps {
   players: Player[];
   config: RoomConfig;
   displayMode: DisplayMode;
+  canEditHands: boolean;
   onAddPlayer: () => void;
   onRequestDelete: (player: Player) => void;
   onNameCommit: (player: Player, name: string) => Promise<void>;
@@ -27,6 +28,7 @@ export function PlayerTable({
   players,
   config,
   displayMode,
+  canEditHands,
   onAddPlayer,
   onRequestDelete,
   onNameCommit,
@@ -99,6 +101,7 @@ export function PlayerTable({
                 player={player}
                 config={config}
                 displayMode={displayMode}
+                canEditHands={canEditHands}
                 toInputValue={toInputValue}
                 toCellLabel={toCellLabel}
                 parseToChips={parseToChips}
@@ -137,6 +140,7 @@ interface PlayerRowProps {
   player: Player;
   config: RoomConfig;
   displayMode: DisplayMode;
+  canEditHands: boolean;
   toInputValue: (chips: number) => string;
   toCellLabel: (chips: number) => string;
   parseToChips: (value: string) => number | null;
@@ -151,6 +155,7 @@ function PlayerRow({
   player,
   config,
   displayMode,
+  canEditHands,
   toInputValue,
   toCellLabel,
   parseToChips,
@@ -225,6 +230,10 @@ function PlayerRow({
   };
 
   const commitHands = async () => {
+    if (!canEditHands) {
+      setHandsDraft(player.hands.toString());
+      return;
+    }
     const numeric = Number(handsDraft);
     if (!Number.isFinite(numeric)) {
       setHandsDraft(player.hands.toString());
@@ -278,6 +287,10 @@ function PlayerRow({
     };
 
   const handleAdjustHands = async (delta: number) => {
+    if (!canEditHands) {
+      setHandsDraft(player.hands.toString());
+      return;
+    }
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       navigator.vibrate(15);
     }
@@ -321,6 +334,7 @@ function PlayerRow({
           <button
             type="button"
             onClick={() => handleAdjustHands(-1)}
+            disabled={!canEditHands}
             className="flex h-8 w-7 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
           >
             −
@@ -331,14 +345,19 @@ function PlayerRow({
             value={handsDraft}
             onChange={(e) => setHandsDraft(e.target.value)}
             onBlur={commitHands}
+            disabled={!canEditHands}
             onKeyDown={handleKeyDown(commitHands, () =>
               setHandsDraft(player.hands.toString())
             )}
-            className="h-8 w-10 border-transparent bg-transparent px-0 text-center text-sm font-bold focus:border-primary focus:bg-muted"
+            className={cn(
+              "h-8 w-10 border-transparent bg-transparent px-0 text-center text-sm font-bold focus:border-primary focus:bg-muted",
+              !canEditHands && "opacity-60"
+            )}
           />
           <button
             type="button"
             onClick={() => handleAdjustHands(1)}
+            disabled={!canEditHands}
             className="flex h-8 w-7 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
           >
             +

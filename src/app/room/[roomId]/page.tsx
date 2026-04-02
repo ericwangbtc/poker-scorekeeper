@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useRoomSubscription } from "@/hooks/use-room-subscription";
 import {
   addPlayer,
+  claimRoomHost,
   createRoom,
   deletePlayer,
   saveRoomSettings,
@@ -13,6 +14,12 @@ import {
 import { createHistoryEntry } from "@/lib/history";
 import { DisplayMode, Player } from "@/lib/types";
 import { toast } from "sonner";
+import {
+  generateHostPin,
+  getOrCreateClientId,
+  isHostClient,
+  matchesHostPin,
+} from "@/lib/host-access";
 
 import { RoomHeader } from "@/components/room-header";
 import { PlayerTable } from "@/components/player-table";
@@ -23,6 +30,7 @@ import { CreateRoomDialog } from "@/components/create-room-dialog";
 import { SettingsSheet } from "@/components/settings-sheet";
 import { HistorySheet } from "@/components/history-sheet";
 import { QrCodeDialog } from "@/components/qr-code-dialog";
+import { HostClaimDialog } from "@/components/host-claim-dialog";
 
 export default function RoomPage() {
   const router = useRouter();
@@ -38,6 +46,13 @@ export default function RoomPage() {
   const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
   const [creatingRoom, setCreatingRoom] = useState(false);
+  const [hostClaimOpen, setHostClaimOpen] = useState(false);
+  const [claimingHost, setClaimingHost] = useState(false);
+  const [clientId, setClientId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setClientId(getOrCreateClientId());
+  }, []);
 
   useEffect(() => {
     if (!loading && !room && error && error.includes("不存在")) {
@@ -66,6 +81,15 @@ export default function RoomPage() {
     if (!roomId || typeof window === "undefined") return "";
     return `${window.location.origin}/room/${roomId}`;
   }, [roomId]);
+
+  const isHost = useMemo(
+    () =>
+      isHostClient({
+        currentClientId: clientId,
+        hostClientId: room?.hostClientId,
+      }),
+    [clientId, room?.hostClientId]
+  );
 
   const handleShare = async () => {
     if (!shareLink) return;
@@ -104,6 +128,10 @@ export default function RoomPage() {
 
   const commitHands = async (player: Player, hands: number) => {
     if (!roomId || !room) throw new Error("房间信息尚未加载");
+    if (!isHost) {
+      toast.error("仅房主可修改手数");
+      return;
+    }
     const rounded = Math.round(hands);
     const updates: Partial<Player> = {
       hands: rounded,
@@ -158,7 +186,13 @@ export default function RoomPage() {
     if (creatingRoom) return;
     try {
       setCreatingRoom(true);
-      const newRoomId = await createRoom();
+      const nextClientId = getOrCreateClientId();
+      const hostPin = generateHostPin();
+      const newRoomId = await createRoom(undefined, {
+        hostClientId: nextClientId ?? "",
+        hostPin,
+      });
+      toast.success(`新房间房主 PIN：${hostPin}`);
       router.push(`/room/${newRoomId}`);
     } catch (err) {
       const message =
@@ -167,6 +201,39 @@ export default function RoomPage() {
     } finally {
       setCreatingRoom(false);
       setCreateConfirmOpen(false);
+    }
+  };
+
+  const handleRevealHostPin = () => {
+    if (!room?.hostPin) {
+      toast.error("当前房间未设置房主 PIN");
+      return;
+    }
+    toast.success(`房主 PIN：${room.hostPin}`);
+  };
+
+  const handleClaimHost = async (pin: string) => {
+    if (!room || !roomId) return;
+    const nextClientId = getOrCreateClientId();
+    if (!nextClientId) {
+      toast.error("无法读取当前设备身份");
+      return;
+    }
+    if (!matchesHostPin(pin, room.hostPin)) {
+      toast.error("PIN 不正确");
+      return;
+    }
+    try {
+      setClaimingHost(true);
+      await claimRoomHost(roomId, nextClientId);
+      setHostClaimOpen(false);
+      toast.success("已认领房主权限");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "认领失败，请稍后再试。";
+      toast.error(message);
+    } finally {
+      setClaimingHost(false);
     }
   };
 
@@ -210,6 +277,9 @@ export default function RoomPage() {
         onSettings={() => setSettingsOpen(true)}
         onHistory={() => setHistoryOpen(true)}
         onCreateRoom={() => setCreateConfirmOpen(true)}
+        isHost={isHost}
+        onRevealHostPin={handleRevealHostPin}
+        onClaimHost={() => setHostClaimOpen(true)}
         disabled={!room}
       />
 
@@ -218,6 +288,7 @@ export default function RoomPage() {
           players={room.players}
           config={room.config}
           displayMode={displayMode}
+          canEditHands={isHost}
           onAddPlayer={() => setAddPlayerOpen(true)}
           onRequestDelete={setDeleteTarget}
           onNameCommit={commitName}
@@ -268,6 +339,13 @@ export default function RoomPage() {
       />
 
       <QrCodeDialog open={qrOpen} onOpenChange={setQrOpen} link={shareLink} />
+
+      <HostClaimDialog
+        open={hostClaimOpen}
+        submitting={claimingHost}
+        onOpenChange={setHostClaimOpen}
+        onSubmit={handleClaimHost}
+      />
     </div>
   );
 }

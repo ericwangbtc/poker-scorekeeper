@@ -16,6 +16,9 @@ interface RoomHeaderProps {
   onSettings: () => void;
   onHistory: () => void;
   onCreateRoom: () => void;
+  isHost: boolean;
+  onRevealHostPin: () => void;
+  onClaimHost: () => void;
   disabled?: boolean;
 }
 
@@ -29,6 +32,9 @@ export function RoomHeader({
   onSettings,
   onHistory,
   onCreateRoom,
+  isHost,
+  onRevealHostPin,
+  onClaimHost,
   disabled,
 }: RoomHeaderProps) {
   return (
@@ -108,14 +114,35 @@ export function RoomHeader({
         <p className="text-xs text-muted-foreground">
           {hintMessage ?? "实时同步中..."}
         </p>
-        <Button
-          size="sm"
-          onClick={onCreateRoom}
-          disabled={disabled}
-          className="h-7 px-3 text-xs gold-gradient text-primary-foreground"
-        >
-          新建房间
-        </Button>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className="border-border bg-muted/40 px-2 py-0.5 text-[11px]"
+          >
+            {isHost ? "你是房主" : "手数只读"}
+          </Badge>
+          <Button
+            size="sm"
+            variant={isHost ? "outline" : "default"}
+            onClick={isHost ? onRevealHostPin : onClaimHost}
+            disabled={disabled}
+            className={
+              isHost
+                ? "h-7 px-3 text-xs"
+                : "h-7 px-3 text-xs gold-gradient text-primary-foreground"
+            }
+          >
+            {isHost ? "查看 PIN" : "PIN 认领"}
+          </Button>
+          <Button
+            size="sm"
+            onClick={onCreateRoom}
+            disabled={disabled}
+            className="h-7 px-3 text-xs gold-gradient text-primary-foreground"
+          >
+            新建房间
+          </Button>
+        </div>
       </div>
     </header>
   );
