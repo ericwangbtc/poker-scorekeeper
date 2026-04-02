@@ -31,6 +31,21 @@ test("describeHistoryEntry formats hands adjustment with value", () => {
   assert.equal(described.tone, "negative");
 });
 
+test("describeHistoryEntry formats player joined with current hands and +1", () => {
+  const described = describeHistoryEntry(
+    makeEntry({
+      type: "player_joined",
+      actorName: "eruu",
+      handsTotal: 2,
+    })
+  );
+
+  assert.equal(described.title, "eruu");
+  assert.equal(described.subtitle, "加入了房间（当前 2 手）");
+  assert.equal(described.value, "+1");
+  assert.equal(described.tone, "positive");
+});
+
 test("groupHistoryEntries groups by local day and keeps desc order", () => {
   const entries: HistoryEntry[] = [
     makeEntry({ id: "1", timestamp: Date.UTC(2026, 2, 18, 10, 0, 0) }),

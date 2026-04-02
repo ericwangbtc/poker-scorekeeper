@@ -51,10 +51,12 @@ export const createHistoryEntry = (input: CreateHistoryInput): HistoryEntry => {
 
 export const describeHistoryEntry = (entry: HistoryEntry): HistoryDescription => {
   if (entry.type === "player_joined") {
+    const totalSuffix =
+      typeof entry.handsTotal === "number" ? `（当前 ${entry.handsTotal} 手）` : "";
     return {
       title: entry.actorName,
-      subtitle: "加入了房间",
-      value: "",
+      subtitle: `加入了房间${totalSuffix}`,
+      value: "+1",
       tone: "positive",
     };
   }
