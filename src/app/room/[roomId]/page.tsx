@@ -20,6 +20,7 @@ import {
   isHostClient,
   matchesHostPin,
 } from "@/lib/host-access";
+import { resolveDisplayMode } from "@/lib/display-mode";
 
 import { RoomHeader } from "@/components/room-header";
 import { PlayerTable } from "@/components/player-table";
@@ -75,12 +76,8 @@ export default function RoomPage() {
       return;
     }
     const stored = localStorage.getItem(`displayMode:${roomId}`);
-    if (stored === "chip" || stored === "cash") {
-      setDisplayMode(stored);
-      return;
-    }
-    setDisplayMode(room?.config.displayMode ?? "chip");
-  }, [roomId, room?.config.displayMode]);
+    setDisplayMode(resolveDisplayMode(stored));
+  }, [roomId]);
 
   const shareLink = useMemo(() => {
     if (!roomId || typeof window === "undefined") return "";

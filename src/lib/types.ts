@@ -3,7 +3,6 @@ export type DisplayMode = "chip" | "cash";
 export interface RoomConfig {
   chipsPerHand: number;
   chipValue: number;
-  displayMode: DisplayMode;
   createdAt: number;
 }
 

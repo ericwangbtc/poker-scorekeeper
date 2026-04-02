@@ -97,7 +97,6 @@ const now = () => Date.now();
 export const createDefaultRoomConfig = (): RoomConfig => ({
   chipsPerHand: DEFAULT_CHIPS_PER_HAND,
   chipValue: DEFAULT_CHIP_VALUE,
-  displayMode: "chip",
   createdAt: now(),
 });
 
@@ -200,24 +199,6 @@ export const addPlayer = async (
   });
   updates[buildHistoryPath(roomId, historyEntry.id)] = historyEntry;
   await update(ref(db), updates);
-};
-
-export const updateRoomConfig = async (
-  roomId: string,
-  updates: Partial<RoomConfig>
-) => {
-  const db = ensureDatabase();
-  const payload: Record<string, unknown> = {
-    [buildRoomPath(roomId, "updatedAt")]: now(),
-  };
-
-  Object.entries(updates).forEach(([key, value]) => {
-    if (value !== undefined) {
-      payload[buildRoomPath(roomId, `config/${key}`)] = value;
-    }
-  });
-
-  await update(ref(db), payload);
 };
 
 export const saveRoomSettings = async (

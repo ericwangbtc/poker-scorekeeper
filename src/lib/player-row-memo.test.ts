@@ -25,7 +25,6 @@ const makeProps = (overrides: Partial<PlayerRowMemoProps> = {}): PlayerRowMemoPr
   config: {
     chipsPerHand: 100,
     chipValue: 0.1,
-    displayMode: "chip",
     createdAt: 1,
   },
   displayMode: "chip",
