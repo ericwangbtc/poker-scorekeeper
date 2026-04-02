@@ -16,7 +16,7 @@ import {
 } from "./constants";
 import { HistoryEntry, Player, RoomConfig, RoomSnapshot } from "./types";
 import { generatePlayerId, generateRoomId } from "./id";
-import { createHistoryEntry } from "./history";
+import { createHistoryEntry, createPlayerJoinedHistoryEntry } from "./history";
 import { database } from "./firebase";
 import { buildHistoryPath, buildRoomPath } from "./room-paths";
 
@@ -130,10 +130,10 @@ export const createRoom = async (
   if (name && name.trim()) {
     const initialPlayer = computeInitialPlayer(config, name.trim());
     players[initialPlayer.id] = initialPlayer;
-    initialHistoryEntry = createHistoryEntry({
-      type: "player_joined",
-      actorId: initialPlayer.id,
-      actorName: initialPlayer.name,
+    initialHistoryEntry = createPlayerJoinedHistoryEntry({
+      playerId: initialPlayer.id,
+      playerName: initialPlayer.name,
+      handsTotal: initialPlayer.hands,
       timestamp: config.createdAt,
     });
   }
@@ -193,10 +193,10 @@ export const addPlayer = async (
     [buildRoomPath(roomId, `players/${player.id}`)]: player,
     [buildRoomPath(roomId, "updatedAt")]: now(),
   };
-  const historyEntry = createHistoryEntry({
-    type: "player_joined",
-    actorId: player.id,
-    actorName: player.name,
+  const historyEntry = createPlayerJoinedHistoryEntry({
+    playerId: player.id,
+    playerName: player.name,
+    handsTotal: player.hands,
   });
   updates[buildHistoryPath(roomId, historyEntry.id)] = historyEntry;
   await update(ref(db), updates);

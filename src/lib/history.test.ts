@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   coalesceHandsAdjustedHistory,
+  createPlayerJoinedHistoryEntry,
   describeHistoryEntry,
   groupHistoryEntries,
   formatRelativeTime,
@@ -152,4 +153,18 @@ test("coalesceHandsAdjustedHistory does not merge different players", () => {
   const merged = coalesceHandsAdjustedHistory(previous, incoming, 10_000);
 
   assert.equal(merged, null);
+});
+
+test("createPlayerJoinedHistoryEntry stores current hands total", () => {
+  const entry = createPlayerJoinedHistoryEntry({
+    playerId: "player_1",
+    playerName: "eee",
+    handsTotal: 1,
+    timestamp: Date.UTC(2026, 2, 18, 10, 0, 0),
+  });
+
+  assert.equal(entry.type, "player_joined");
+  assert.equal(entry.actorId, "player_1");
+  assert.equal(entry.actorName, "eee");
+  assert.equal(entry.handsTotal, 1);
 });

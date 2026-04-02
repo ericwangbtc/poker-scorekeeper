@@ -34,6 +34,13 @@ type CreateHistoryInput = Omit<HistoryEntry, "id" | "timestamp"> & {
   timestamp?: number;
 };
 
+type CreatePlayerJoinedHistoryInput = {
+  playerId: string;
+  playerName: string;
+  handsTotal: number;
+  timestamp?: number;
+};
+
 const generateHistoryId = (timestamp?: number) => {
   const timePortion = (timestamp ?? Date.now()).toString(36);
   const randomPortion = Math.random().toString(36).slice(2, 8);
@@ -48,6 +55,17 @@ export const createHistoryEntry = (input: CreateHistoryInput): HistoryEntry => {
     timestamp,
   };
 };
+
+export const createPlayerJoinedHistoryEntry = (
+  input: CreatePlayerJoinedHistoryInput
+): HistoryEntry =>
+  createHistoryEntry({
+    type: "player_joined",
+    actorId: input.playerId,
+    actorName: input.playerName,
+    handsTotal: input.handsTotal,
+    timestamp: input.timestamp,
+  });
 
 export const coalesceHandsAdjustedHistory = (
   previousEntry: HistoryEntry | undefined,
