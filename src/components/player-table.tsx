@@ -86,12 +86,12 @@ export function PlayerTable({
           </colgroup>
           <thead className="bg-muted text-[11px] font-medium uppercase text-muted-foreground">
             <tr>
-              <th className="h-9 px-1.5 text-center">玩家</th>
-              <th className="h-9 px-1.5 text-center">手数</th>
-              <th className="h-9 px-1.5 text-center">买入</th>
-              <th className="h-9 px-1.5 text-center">剩余</th>
-              <th className="h-9 px-1.5 text-center">盈亏</th>
-              <th className="h-9 px-1.5 text-center"></th>
+              <th className="h-8 px-1.5 text-center">玩家</th>
+              <th className="h-8 px-1.5 text-center">手数</th>
+              <th className="h-8 px-1.5 text-center">买入</th>
+              <th className="h-8 px-1.5 text-center">剩余</th>
+              <th className="h-8 px-1.5 text-center">盈亏</th>
+              <th className="h-8 px-1.5 text-center"></th>
             </tr>
           </thead>
           <tbody>
@@ -318,7 +318,7 @@ function PlayerRow({
         )}`;
 
   return (
-    <tr className="h-[48px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
+    <tr className="h-[44px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
       <td className="px-1.5 text-center">
         <Input
           type="text"
