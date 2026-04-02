@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useRoomSubscription } from "@/hooks/use-room-subscription";
 import {
@@ -49,6 +49,11 @@ export default function RoomPage() {
   const [hostClaimOpen, setHostClaimOpen] = useState(false);
   const [claimingHost, setClaimingHost] = useState(false);
   const [clientId, setClientId] = useState<string | null>(null);
+  const roomRef = useRef(room);
+
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
 
   useEffect(() => {
     setClientId(getOrCreateClientId());
@@ -108,10 +113,13 @@ export default function RoomPage() {
     }
   };
 
-  const handleAddPlayer = async (name: string) => {
-    if (!roomId || !room) throw new Error("房间信息尚未加载");
-    await addPlayer(roomId, room.config, name);
-  };
+  const handleAddPlayer = useCallback(
+    async (name: string) => {
+      if (!roomId || !roomRef.current) throw new Error("房间信息尚未加载");
+      await addPlayer(roomId, roomRef.current.config, name);
+    },
+    [roomId]
+  );
 
   const handleDeletePlayer = async () => {
     if (!roomId || !deleteTarget) return;
@@ -126,70 +134,96 @@ export default function RoomPage() {
     }
   };
 
-  const commitHands = async (player: Player, hands: number) => {
-    if (!roomId || !room) throw new Error("房间信息尚未加载");
-    if (!isHost) {
-      toast.error("仅房主可修改手数");
-      return;
-    }
-    const rounded = Math.round(hands);
-    const updates: Partial<Player> = {
-      hands: rounded,
-      buyInChips: rounded * room.config.chipsPerHand,
-      buyInOverride: false,
-    };
-    const diff = rounded - player.hands;
-    const historyEntry =
-      diff === 0
-        ? undefined
-        : createHistoryEntry({
-            type: "hands_adjusted",
-            actorId: player.id,
-            actorName: player.name,
-            handsDelta: diff,
-            handsTotal: rounded,
-          });
-    const mergedHistoryEntry =
-      historyEntry && room?.history[0]
-        ? coalesceHandsAdjustedHistory(room.history[0], historyEntry, 10_000)
-        : null;
-    await updatePlayer(
-      roomId,
-      player.id,
-      updates,
-      mergedHistoryEntry ?? historyEntry
-    );
-  };
+  const commitHands = useCallback(
+    async (player: Player, hands: number) => {
+      const roomValue = roomRef.current;
+      if (!roomId || !roomValue) throw new Error("房间信息尚未加载");
+      if (!isHost) {
+        toast.error("仅房主可修改手数");
+        return;
+      }
+      const rounded = Math.round(hands);
+      const updates: Partial<Player> = {
+        hands: rounded,
+        buyInChips: rounded * roomValue.config.chipsPerHand,
+        buyInOverride: false,
+      };
+      const diff = rounded - player.hands;
+      const historyEntry =
+        diff === 0
+          ? undefined
+          : createHistoryEntry({
+              type: "hands_adjusted",
+              actorId: player.id,
+              actorName: player.name,
+              handsDelta: diff,
+              handsTotal: rounded,
+            });
+      const latestHistoryEntry = roomValue.history[0];
+      const mergedHistoryEntry =
+        historyEntry && latestHistoryEntry
+          ? coalesceHandsAdjustedHistory(
+              latestHistoryEntry,
+              historyEntry,
+              10_000
+            )
+          : null;
+      await updatePlayer(
+        roomId,
+        player.id,
+        updates,
+        mergedHistoryEntry ?? historyEntry
+      );
+    },
+    [isHost, roomId]
+  );
 
-  const adjustHands = async (player: Player, delta: number) => {
-    await commitHands(player, player.hands + delta);
-  };
+  const adjustHands = useCallback(
+    async (player: Player, delta: number) => {
+      await commitHands(player, player.hands + delta);
+    },
+    [commitHands]
+  );
 
-  const commitCurrentChips = async (player: Player, chips: number) => {
-    if (!roomId) throw new Error("房间信息尚未加载");
-    await updatePlayer(roomId, player.id, {
-      currentChips: Math.round(chips * 100) / 100,
-    });
-  };
+  const commitCurrentChips = useCallback(
+    async (player: Player, chips: number) => {
+      if (!roomId) throw new Error("房间信息尚未加载");
+      await updatePlayer(roomId, player.id, {
+        currentChips: Math.round(chips * 100) / 100,
+      });
+    },
+    [roomId]
+  );
 
-  const commitName = async (player: Player, name: string) => {
-    if (!roomId) throw new Error("房间信息尚未加载");
-    await updatePlayer(roomId, player.id, { name });
-  };
+  const commitName = useCallback(
+    async (player: Player, name: string) => {
+      if (!roomId) throw new Error("房间信息尚未加载");
+      await updatePlayer(roomId, player.id, { name });
+    },
+    [roomId]
+  );
 
-  const handleSettingsSave = async (values: {
-    chipsPerHand: number;
-    chipValue: number;
-  }) => {
-    if (!roomId || !room) throw new Error("房间信息尚未加载");
-    await saveRoomSettings(
-      roomId,
-      values,
-      room.players,
-      room.config.chipsPerHand
-    );
-    toast.success("房间设置已更新");
-  };
+  const handleSettingsSave = useCallback(
+    async (values: {
+      chipsPerHand: number;
+      chipValue: number;
+    }) => {
+      const roomValue = roomRef.current;
+      if (!roomId || !roomValue) throw new Error("房间信息尚未加载");
+      await saveRoomSettings(
+        roomId,
+        values,
+        roomValue.players,
+        roomValue.config.chipsPerHand
+      );
+      toast.success("房间设置已更新");
+    },
+    [roomId]
+  );
+
+  const openAddPlayerDialog = useCallback(() => {
+    setAddPlayerOpen(true);
+  }, []);
 
   const handleCreateRoom = async () => {
     if (creatingRoom) return;
@@ -298,7 +332,7 @@ export default function RoomPage() {
           config={room.config}
           displayMode={displayMode}
           canEditHands={isHost}
-          onAddPlayer={() => setAddPlayerOpen(true)}
+          onAddPlayer={openAddPlayerDialog}
           onRequestDelete={setDeleteTarget}
           onNameCommit={commitName}
           onHandsCommit={commitHands}

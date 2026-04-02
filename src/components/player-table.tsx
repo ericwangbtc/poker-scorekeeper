@@ -1,9 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef, KeyboardEvent } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+  useRef,
+  KeyboardEvent,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DisplayMode, Player, RoomConfig } from "@/lib/types";
+import {
+  arePlayerRowPropsEqual,
+  type PlayerRowMemoProps,
+} from "@/lib/player-row-memo";
 import { cn } from "@/lib/utils";
 
 interface PlayerTableProps {
@@ -136,22 +147,9 @@ export function PlayerTable({
   );
 }
 
-interface PlayerRowProps {
-  player: Player;
-  config: RoomConfig;
-  displayMode: DisplayMode;
-  canEditHands: boolean;
-  toInputValue: (chips: number) => string;
-  toCellLabel: (chips: number) => string;
-  parseToChips: (value: string) => number | null;
-  onNameCommit: (player: Player, name: string) => Promise<void>;
-  onHandsCommit: (player: Player, hands: number) => Promise<void>;
-  onHandsAdjust: (player: Player, delta: number) => Promise<void>;
-  onCurrentCommit: (player: Player, chips: number) => Promise<void>;
-  onDelete: (player: Player) => void;
-}
+type PlayerRowProps = PlayerRowMemoProps;
 
-function PlayerRow({
+const PlayerRow = memo(function PlayerRow({
   player,
   config,
   displayMode,
@@ -209,7 +207,15 @@ function PlayerRow({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [currentDraft, isEditingCurrent, parseToChips, player, onCurrentCommit, toInputValue]);
+  }, [
+    currentDraft,
+    isEditingCurrent,
+    onCurrentCommit,
+    parseToChips,
+    player,
+    player.currentChips,
+    toInputValue,
+  ]);
 
   const derivedBuyIn = player.buyInOverride
     ? player.buyInChips
@@ -414,4 +420,4 @@ function PlayerRow({
       </td>
     </tr>
   );
-}
+}, arePlayerRowPropsEqual);

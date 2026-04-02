@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,11 +27,12 @@ export function HostClaimDialog({
 }: HostClaimDialogProps) {
   const [pin, setPin] = useState("");
 
-  useEffect(() => {
-    if (!open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
       setPin("");
     }
-  }, [open]);
+    onOpenChange(nextOpen);
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -39,7 +40,7 @@ export function HostClaimDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>PIN 认领房主</DialogTitle>
