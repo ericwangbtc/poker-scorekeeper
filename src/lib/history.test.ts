@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  coalesceHandsAdjustedHistory,
   describeHistoryEntry,
   groupHistoryEntries,
   formatRelativeTime,
@@ -73,4 +74,82 @@ test("formatRelativeTime returns absolute date for older events", () => {
   });
 
   assert.match(text, /2026/);
+});
+
+test("coalesceHandsAdjustedHistory merges same player entries within 10 seconds", () => {
+  const previous = makeEntry({
+    id: "history_prev",
+    timestamp: Date.UTC(2026, 2, 18, 10, 0, 0),
+    type: "hands_adjusted",
+    actorId: "p1",
+    actorName: "小王",
+    handsDelta: 1,
+    handsTotal: 3,
+  });
+  const incoming = makeEntry({
+    id: "history_next",
+    timestamp: Date.UTC(2026, 2, 18, 10, 0, 9),
+    type: "hands_adjusted",
+    actorId: "p1",
+    actorName: "小王",
+    handsDelta: 2,
+    handsTotal: 5,
+  });
+
+  const merged = coalesceHandsAdjustedHistory(previous, incoming, 10_000);
+
+  assert.equal(merged?.id, "history_prev");
+  assert.equal(merged?.handsDelta, 3);
+  assert.equal(merged?.handsTotal, 5);
+  assert.equal(merged?.timestamp, incoming.timestamp);
+});
+
+test("coalesceHandsAdjustedHistory does not merge when time gap exceeds 10 seconds", () => {
+  const previous = makeEntry({
+    id: "history_prev",
+    timestamp: Date.UTC(2026, 2, 18, 10, 0, 0),
+    type: "hands_adjusted",
+    actorId: "p1",
+    actorName: "小王",
+    handsDelta: 1,
+    handsTotal: 3,
+  });
+  const incoming = makeEntry({
+    id: "history_next",
+    timestamp: Date.UTC(2026, 2, 18, 10, 0, 11),
+    type: "hands_adjusted",
+    actorId: "p1",
+    actorName: "小王",
+    handsDelta: 2,
+    handsTotal: 5,
+  });
+
+  const merged = coalesceHandsAdjustedHistory(previous, incoming, 10_000);
+
+  assert.equal(merged, null);
+});
+
+test("coalesceHandsAdjustedHistory does not merge different players", () => {
+  const previous = makeEntry({
+    id: "history_prev",
+    timestamp: Date.UTC(2026, 2, 18, 10, 0, 0),
+    type: "hands_adjusted",
+    actorId: "p1",
+    actorName: "小王",
+    handsDelta: 1,
+    handsTotal: 3,
+  });
+  const incoming = makeEntry({
+    id: "history_next",
+    timestamp: Date.UTC(2026, 2, 18, 10, 0, 4),
+    type: "hands_adjusted",
+    actorId: "p2",
+    actorName: "小李",
+    handsDelta: 2,
+    handsTotal: 7,
+  });
+
+  const merged = coalesceHandsAdjustedHistory(previous, incoming, 10_000);
+
+  assert.equal(merged, null);
 });

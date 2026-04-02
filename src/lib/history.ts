@@ -49,6 +49,60 @@ export const createHistoryEntry = (input: CreateHistoryInput): HistoryEntry => {
   };
 };
 
+export const coalesceHandsAdjustedHistory = (
+  previousEntry: HistoryEntry | undefined,
+  incomingEntry: HistoryEntry,
+  mergeWindowMs = 10_000
+): HistoryEntry | null => {
+  if (!previousEntry) {
+    return null;
+  }
+
+  if (
+    previousEntry.type !== "hands_adjusted" ||
+    incomingEntry.type !== "hands_adjusted"
+  ) {
+    return null;
+  }
+
+  const previousDelta = previousEntry.handsDelta;
+  const incomingDelta = incomingEntry.handsDelta;
+  if (
+    typeof previousDelta !== "number" ||
+    typeof incomingDelta !== "number" ||
+    previousDelta === 0 ||
+    incomingDelta === 0
+  ) {
+    return null;
+  }
+
+  const isSameDirection = Math.sign(previousDelta) === Math.sign(incomingDelta);
+  if (!isSameDirection) {
+    return null;
+  }
+
+  const isSameActor =
+    previousEntry.actorId && incomingEntry.actorId
+      ? previousEntry.actorId === incomingEntry.actorId
+      : previousEntry.actorName === incomingEntry.actorName;
+  if (!isSameActor) {
+    return null;
+  }
+
+  const timeGap = incomingEntry.timestamp - previousEntry.timestamp;
+  if (timeGap < 0 || timeGap > mergeWindowMs) {
+    return null;
+  }
+
+  return {
+    ...previousEntry,
+    actorName: incomingEntry.actorName,
+    handsDelta: previousDelta + incomingDelta,
+    handsTotal: incomingEntry.handsTotal,
+    timestamp: incomingEntry.timestamp,
+  };
+};
+
 export const describeHistoryEntry = (entry: HistoryEntry): HistoryDescription => {
   if (entry.type === "player_joined") {
     const totalSuffix =

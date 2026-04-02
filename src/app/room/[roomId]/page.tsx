@@ -11,7 +11,7 @@ import {
   saveRoomSettings,
   updatePlayer,
 } from "@/lib/room-service";
-import { createHistoryEntry } from "@/lib/history";
+import { coalesceHandsAdjustedHistory, createHistoryEntry } from "@/lib/history";
 import { DisplayMode, Player } from "@/lib/types";
 import { toast } from "sonner";
 import {
@@ -149,7 +149,16 @@ export default function RoomPage() {
             handsDelta: diff,
             handsTotal: rounded,
           });
-    await updatePlayer(roomId, player.id, updates, historyEntry);
+    const mergedHistoryEntry =
+      historyEntry && room?.history[0]
+        ? coalesceHandsAdjustedHistory(room.history[0], historyEntry, 10_000)
+        : null;
+    await updatePlayer(
+      roomId,
+      player.id,
+      updates,
+      mergedHistoryEntry ?? historyEntry
+    );
   };
 
   const adjustHands = async (player: Player, delta: number) => {
