@@ -299,6 +299,11 @@ const PlayerRow = memo(function PlayerRow({
           placeholder="输入"
           value={current.value}
           readOnly={current.pending}
+          onFocus={() => {
+            if (!current.pending && current.draft === null && current.value === "0") {
+              current.change("");
+            }
+          }}
           onChange={(event) => current.change(event.target.value)}
           onBlur={current.blur(commitCurrent)}
           onKeyDown={current.keyDown}
