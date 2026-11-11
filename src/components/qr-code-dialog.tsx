@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { focusDialogHeading } from "@/lib/dialog-focus";
 import Image from "next/image";
 import QRCode from "qrcode";
 import {
@@ -75,9 +76,9 @@ function QrCodeDisplay({ link }: { link: string }) {
 export function QrCodeDialog({ open, onOpenChange, link, onCopy, onCloseAutoFocus }: QrCodeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
+      <DialogContent onOpenAutoFocus={focusDialogHeading} onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>邀请加入房间</DialogTitle>
+          <DialogTitle data-dialog-heading tabIndex={-1} className="outline-none">邀请加入房间</DialogTitle>
           <DialogDescription>
             扫描二维码或打开房间链接即可加入。
           </DialogDescription>

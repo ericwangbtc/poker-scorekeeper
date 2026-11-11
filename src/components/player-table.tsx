@@ -319,6 +319,7 @@ const PlayerRow = memo(function PlayerRow({
       <td className="px-1 text-center">
         <button
           type="button"
+          aria-label={`删除 ${player.name}`}
           onClick={(event) => onDelete(player, event.currentTarget)}
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
         >

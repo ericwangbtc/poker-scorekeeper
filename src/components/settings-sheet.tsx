@@ -56,6 +56,7 @@ export function SettingsSheet({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (saving) return;
     if (!isValid) {
       setError("请输入有效的数字");
       return;

@@ -203,6 +203,7 @@ export default function RoomPage() {
       const hostPin = generateHostPin();
       const newRoomId = await createRoom(undefined, hostPin);
       toast.success("房间已创建，可在房间内查看房主 PIN。");
+      setCreateConfirmOpen(false);
       router.push(`/room/${newRoomId}`);
     } catch (err) {
       const message =
@@ -210,7 +211,6 @@ export default function RoomPage() {
       toast.error(message);
     } finally {
       setCreatingRoom(false);
-      setCreateConfirmOpen(false);
     }
   };
 

@@ -103,7 +103,12 @@ export function HistorySheet({
             {player ? `${player.name}的筹码变更记录` : "历史记录"}
           </SheetTitle>
         </SheetHeader>
-        <div className="min-h-0 overflow-y-auto overscroll-contain px-4">
+        <div
+          role="region"
+          aria-label="记录列表"
+          tabIndex={0}
+          className="min-h-0 overflow-y-auto overscroll-contain px-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+        >
           {groupedEntries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               {player ? "暂无筹码变更记录。" : "暂无历史记录。"}

@@ -39,7 +39,7 @@ export function DeletePlayerDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={(o) => !o && onCancel()}>
+    <AlertDialog open={open} onOpenChange={(open) => { if (!open && !isProcessing) onCancel(); }}>
       <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle>确认删除</AlertDialogTitle>
@@ -52,7 +52,10 @@ export function DeletePlayerDialog({
             取消
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleConfirm}
+            onClick={(event) => {
+              event.preventDefault();
+              void handleConfirm();
+            }}
             disabled={isProcessing}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >

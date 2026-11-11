@@ -27,7 +27,7 @@ export function CreateRoomDialog({
   onConfirm,
 }: CreateRoomDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={(o) => !o && onCancel()}>
+    <AlertDialog open={open} onOpenChange={(open) => { if (!open && !isLoading) onCancel(); }}>
       <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle>创建新房间</AlertDialogTitle>
@@ -40,7 +40,10 @@ export function CreateRoomDialog({
             再想想
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={(event) => {
+              event.preventDefault();
+              void onConfirm();
+            }}
             disabled={isLoading}
             className="gold-gradient text-primary-foreground"
           >
