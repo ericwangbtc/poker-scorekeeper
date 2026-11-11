@@ -31,24 +31,14 @@ export interface HistoryEntry {
   handsTotal?: number;
 }
 
-export interface RoomSnapshot {
-  config?: RoomConfig;
-  players?: Record<string, Player>;
-  hostClientId?: string;
-  hostPin?: string;
-  updatedAt?: number;
-  expiresAt?: number;
-}
-
 export interface RoomData {
   id: string;
   config: RoomConfig;
   players: Player[];
   history: HistoryEntry[];
-  hostClientId: string;
-  hostPin: string;
+  isHost: boolean;
   updatedAt: number;
-  expiresAt?: number;
+  expiresAt: number;
 }
 
 export interface PlayerDraft {

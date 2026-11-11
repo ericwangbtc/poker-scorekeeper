@@ -1,67 +1,39 @@
 # Poker Scorekeeper
 
-实时同步的德州扑克记分板（Next.js + Firebase Realtime Database）。
+实时同步的德州扑克记分板。Cloudflare Worker 提供页面、静态资源和房间 API。每个房间使用独立的 SQLite Durable Object 保存状态，通过 WebSocket 同步玩家、筹码和历史记录。
 
-## 功能
-
-- 创建房间并分享链接给同桌玩家
-- 实时同步玩家手数、买入、剩余筹码
-- 支持筹码/金额双视图
-- 内置历史记录与二维码分享
+- 创建房间后，可通过链接或二维码邀请玩家。
+- 支持筹码和金额双视图。房主可以修改手数，也可以通过 PIN 转移房主权限。
+- 每个房间保留 30 天，保存最近 200 条历史记录。
 
 ## 本地开发
 
-1. 安装依赖
+需要 Node.js 24 和 pnpm。
 
 ```bash
-pnpm install
-```
-
-2. 配置环境变量（复制 `.env.example` 到 `.env.local`）
-
-```bash
-cp .env.example .env.local
-```
-
-3. 启动开发服务器
-
-```bash
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-访问 `http://localhost:3000`。
+打开 http://localhost:5173。页面、房间 API 和 WebSocket 共用本地地址。
 
-## 脚本
+## 部署到 Cloudflare
 
-- `pnpm dev`: 启动开发环境
-- `pnpm lint`: 运行 ESLint
-- `pnpm test`: 运行 Node 内置测试
-- `pnpm build`: 生产构建
-- `pnpm start`: 启动生产服务
+```bash
+pnpm exec wrangler login
+pnpm deploy
+```
 
-## 环境变量
+`pnpm deploy` 会构建 vinext 应用，并使用 Wrangler 发布前端、房间服务和 Durable Object 绑定。部署完成后，Wrangler 会输出访问地址。旧房间和历史记录不导入 Cloudflare。
 
-必须配置以下 Firebase 公共变量：
+## 检查生产构建
 
-- `NEXT_PUBLIC_FIREBASE_API_KEY`
-- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `NEXT_PUBLIC_FIREBASE_DATABASE_URL`
-- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-- `NEXT_PUBLIC_FIREBASE_APP_ID`
+```bash
+pnpm lint
+pnpm test
+pnpm typecheck
+pnpm build
+pnpm preview
+```
 
-## 目录结构
-
-- `src/app`: Next App Router 页面
-- `src/components`: UI 组件与业务组件
-- `src/hooks`: 数据订阅 hooks
-- `src/lib`: Firebase 服务与业务计算逻辑
-
-## 技术栈
-
-- Next.js 16
-- React 19
-- TypeScript
-- Firebase Realtime Database
-- Tailwind CSS 4
+生产构建预览默认使用 http://localhost:8787。

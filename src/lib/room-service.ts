@@ -1,277 +1,94 @@
-import {
-  limitToLast,
-  onValue,
-  orderByChild,
-  query,
-  ref,
-  runTransaction,
-  Unsubscribe,
-  update,
-} from "firebase/database";
-import {
-  DAYS_TO_EXPIRE,
-  DEFAULT_CHIPS_PER_HAND,
-  DEFAULT_CHIP_VALUE,
-  MILLISECONDS_IN_DAY,
-} from "./constants";
-import { HistoryEntry, Player, RoomConfig, RoomSnapshot } from "./types";
-import { generatePlayerId, generateRoomId } from "./id";
-import { createHistoryEntry, createPlayerJoinedHistoryEntry } from "./history";
-import { database } from "./firebase";
-import { buildHistoryPath, buildRoomPath } from "./room-paths";
+import type { RoomCommand } from "../../worker/commands";
+import { getOrCreateClientId } from "./host-access";
+import { generateRoomId } from "./id";
+import type { RoomData } from "./types";
 
-const ensureDatabase = () => {
-  if (!database) {
-    throw new Error("Firebase 未配置，请添加必要的环境变量。");
-  }
-  return database;
-};
+const connectionError = "无法连接房间服务，正在重试。";
 
-const DEFAULT_HISTORY_LIMIT = 200;
+function roomUrl(roomId: string) {
+  return new URL(`/rooms/${encodeURIComponent(roomId)}`, window.location.origin);
+}
 
-export const subscribeToRoom = (
-  roomId: string,
-  onSnapshot: (room: RoomSnapshot | null) => void,
-  onError?: (error: Error) => void
-): Unsubscribe => {
-  const db = ensureDatabase();
-  const roomRef = ref(db, buildRoomPath(roomId));
-  return onValue(
-    roomRef,
-    (snapshot) => {
-      const value = snapshot.val() as RoomSnapshot | null;
-      if (value) {
-        onSnapshot(value);
-      } else {
-        onSnapshot(null);
-      }
+async function request<T>(roomId: string, command: RoomCommand) {
+  const response = await fetch(roomUrl(roomId), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Client-Id": getOrCreateClientId(),
     },
-    (error) => {
-      if (onError) {
-        onError(error);
-      } else {
-        console.error(error);
-      }
-    }
-  );
-};
+    body: JSON.stringify(command),
+  });
+  const data = await response.json();
+  return { response, data: data as T & { error?: string } };
+}
 
-export const subscribeToRoomHistory = (
+export async function sendRoomCommand<T = { ok: true }>(
   roomId: string,
-  onSnapshot: (entries: HistoryEntry[]) => void,
-  onError?: (error: Error) => void,
-  limit = DEFAULT_HISTORY_LIMIT
-): Unsubscribe => {
-  const db = ensureDatabase();
-  const historyRef = query(
-    ref(db, buildRoomPath(roomId, "history")),
-    orderByChild("timestamp"),
-    limitToLast(limit)
-  );
+  command: Exclude<RoomCommand, { type: "create" }>
+): Promise<T> {
+  const { response, data } = await request<T>(roomId, command);
+  if (!response.ok) throw new Error(data.error ?? "房间操作失败，请稍后再试。");
+  return data;
+}
 
-  return onValue(
-    historyRef,
-    (snapshot) => {
-      const value = snapshot.val() as Record<string, HistoryEntry> | null;
-      if (!value) {
-        onSnapshot([]);
-        return;
-      }
-      const entries = Object.values(value).sort(
-        (a, b) => b.timestamp - a.timestamp || b.id.localeCompare(a.id)
-      );
-      onSnapshot(entries);
-    },
-    (error) => {
-      if (onError) {
-        onError(error);
-      } else {
-        console.error(error);
-      }
-    }
-  );
-};
-
-const now = () => Date.now();
-
-export const createDefaultRoomConfig = (): RoomConfig => ({
-  chipsPerHand: DEFAULT_CHIPS_PER_HAND,
-  chipValue: DEFAULT_CHIP_VALUE,
-  createdAt: now(),
-});
-
-const computeInitialPlayer = (config: RoomConfig, name: string): Player => {
-  const hands = 1;
-  const buyIn = hands * config.chipsPerHand;
-  return {
-    id: generatePlayerId(),
-    name,
-    hands,
-    currentChips: 0,
-    buyInChips: buyIn,
-    order: now(),
-    buyInOverride: false,
-  };
-};
-
-export const createRoom = async (
-  name?: string,
-  options?: { hostClientId?: string; hostPin?: string }
-) => {
-  const db = ensureDatabase();
-  let attempts = 0;
-  const maxAttempts = 10;
-  let roomId = "";
-  const config = createDefaultRoomConfig();
-  const players: Record<string, Player> = {};
-  let initialHistoryEntry: HistoryEntry | undefined;
-
-  if (name && name.trim()) {
-    const initialPlayer = computeInitialPlayer(config, name.trim());
-    players[initialPlayer.id] = initialPlayer;
-    initialHistoryEntry = createPlayerJoinedHistoryEntry({
-      playerId: initialPlayer.id,
-      playerName: initialPlayer.name,
-      handsTotal: initialPlayer.hands,
-      timestamp: config.createdAt,
+export async function createRoom(name: string | undefined, pin: string) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const { response, data } = await request<{ roomId: string }>(generateRoomId(), {
+      type: "create",
+      name,
+      pin,
     });
+    if (response.ok) return data.roomId;
+    if (response.status !== 409) throw new Error(data.error ?? "创建房间失败。");
   }
-
-  const roomPayload: {
-    config: RoomConfig;
-    players: Record<string, Player>;
-    hostClientId: string;
-    hostPin: string;
-    updatedAt: number;
-    expiresAt: number;
-  } = {
-    config,
-    players,
-    hostClientId: options?.hostClientId ?? "",
-    hostPin: options?.hostPin ?? "",
-    updatedAt: config.createdAt,
-    expiresAt: config.createdAt + DAYS_TO_EXPIRE * MILLISECONDS_IN_DAY,
-  };
-
-  while (attempts < maxAttempts) {
-    roomId = generateRoomId();
-    const roomRef = ref(db, buildRoomPath(roomId));
-    const result = await runTransaction(
-      roomRef,
-      (current) => (current === null ? roomPayload : undefined),
-      { applyLocally: false }
-    );
-    if (result.committed) {
-      if (initialHistoryEntry) {
-        await update(ref(db), {
-          [buildHistoryPath(roomId, initialHistoryEntry.id)]: initialHistoryEntry,
-        });
-      }
-      return roomId;
-    }
-    attempts += 1;
-  }
-
   throw new Error("创建房间失败，请稍后再试。");
-};
+}
 
-export const addPlayer = async (
+export function subscribeToRoom(
   roomId: string,
-  config: RoomConfig,
-  name: string
-) => {
-  const db = ensureDatabase();
-  const trimmed = name.trim();
-  const player =
-    trimmed.length > 0 ? computeInitialPlayer(config, trimmed) : undefined;
-  if (!player) {
-    throw new Error("玩家不能为空");
+  onSnapshot: (room: RoomData | null) => void,
+  onError: (error: Error) => void
+) {
+  let url: URL;
+  let clientId: string;
+  try {
+    url = roomUrl(roomId);
+    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    clientId = getOrCreateClientId();
+  } catch (error) {
+    onError(error instanceof Error ? error : new Error("无法连接房间服务。"));
+    return () => {};
   }
 
-  const updates: Record<string, unknown> = {
-    [buildRoomPath(roomId, `players/${player.id}`)]: player,
-    [buildRoomPath(roomId, "updatedAt")]: now(),
-  };
-  const historyEntry = createPlayerJoinedHistoryEntry({
-    playerId: player.id,
-    playerName: player.name,
-    handsTotal: player.hands,
-  });
-  updates[buildHistoryPath(roomId, historyEntry.id)] = historyEntry;
-  await update(ref(db), updates);
-};
+  let socket: WebSocket;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  let stopped = false;
+  let delay = 500;
 
-export const saveRoomSettings = async (
-  roomId: string,
-  values: { chipsPerHand: number; chipValue: number },
-  players: Player[],
-  previousChipsPerHand: number
-) => {
-  const db = ensureDatabase();
-  const payload: Record<string, unknown> = {
-    [buildRoomPath(roomId, "updatedAt")]: now(),
-    [buildRoomPath(roomId, "config/chipsPerHand")]: values.chipsPerHand,
-    [buildRoomPath(roomId, "config/chipValue")]: values.chipValue,
-  };
-
-  if (values.chipsPerHand !== previousChipsPerHand) {
-    players
-      .filter((player) => !player.buyInOverride)
-      .forEach((player) => {
-        payload[buildRoomPath(roomId, `players/${player.id}/buyInChips`)] =
-          player.hands * values.chipsPerHand;
-      });
-  }
-
-  await update(ref(db), payload);
-};
-
-export const updatePlayer = async (
-  roomId: string,
-  playerId: string,
-  updates: Partial<Player>,
-  historyEntry?: HistoryEntry
-) => {
-  const db = ensureDatabase();
-  const payload: Record<string, unknown> = {
-    [buildRoomPath(roomId, "updatedAt")]: now(),
+  const connect = () => {
+    socket = new WebSocket(url);
+    socket.onopen = () => {
+      if (!stopped) socket.send(clientId);
+    };
+    socket.onmessage = (event) => {
+      if (stopped) return;
+      const room = JSON.parse(event.data) as RoomData | null;
+      if (!room) stopped = true;
+      delay = 500;
+      onSnapshot(room);
+    };
+    socket.onclose = () => {
+      if (stopped) return;
+      onError(new Error(connectionError));
+      retry = setTimeout(connect, delay);
+      delay = Math.min(delay * 2, 10_000);
+    };
   };
 
-  Object.entries(updates).forEach(([key, value]) => {
-    if (value !== undefined) {
-      payload[buildRoomPath(roomId, `players/${playerId}/${key}`)] = value;
-    }
-  });
-
-  if (historyEntry) {
-    payload[buildHistoryPath(roomId, historyEntry.id)] = historyEntry;
-  }
-
-  await update(ref(db), payload);
-};
-
-export const deletePlayer = async (
-  roomId: string,
-  playerId: string,
-  playerName: string
-) => {
-  const db = ensureDatabase();
-  const historyEntry = createHistoryEntry({
-    type: "player_left",
-    actorId: playerId,
-    actorName: playerName,
-  });
-  await update(ref(db), {
-    [buildRoomPath(roomId, `players/${playerId}`)]: null,
-    [buildRoomPath(roomId, "updatedAt")]: now(),
-    [buildHistoryPath(roomId, historyEntry.id)]: historyEntry,
-  });
-};
-
-export const claimRoomHost = async (roomId: string, hostClientId: string) => {
-  const db = ensureDatabase();
-  await update(ref(db), {
-    [buildRoomPath(roomId, "hostClientId")]: hostClientId,
-    [buildRoomPath(roomId, "updatedAt")]: now(),
-  });
-};
+  connect();
+  return () => {
+    stopped = true;
+    clearTimeout(retry);
+    socket.close();
+  };
+}

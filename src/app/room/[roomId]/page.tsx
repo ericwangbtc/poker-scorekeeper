@@ -1,25 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useRoomSubscription } from "@/hooks/use-room-subscription";
-import {
-  addPlayer,
-  claimRoomHost,
-  createRoom,
-  deletePlayer,
-  saveRoomSettings,
-  updatePlayer,
-} from "@/lib/room-service";
-import { coalesceHandsAdjustedHistory, createHistoryEntry } from "@/lib/history";
+import { createRoom, sendRoomCommand } from "@/lib/room-service";
 import { DisplayMode, Player } from "@/lib/types";
 import { toast } from "sonner";
-import {
-  generateHostPin,
-  getOrCreateClientId,
-  isHostClient,
-  matchesHostPin,
-} from "@/lib/host-access";
+import { generateHostPin, normalizeHostPin } from "@/lib/host-access";
 import { resolveDisplayMode } from "@/lib/display-mode";
 
 import { RoomHeader } from "@/components/room-header";
@@ -49,17 +36,6 @@ export default function RoomPage() {
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [hostClaimOpen, setHostClaimOpen] = useState(false);
   const [claimingHost, setClaimingHost] = useState(false);
-  const [clientId, setClientId] = useState<string | null>(null);
-  const roomRef = useRef(room);
-
-  useEffect(() => {
-    roomRef.current = room;
-  }, [room]);
-
-  useEffect(() => {
-    setClientId(getOrCreateClientId());
-  }, []);
-
   useEffect(() => {
     if (!loading && !room && error && error.includes("不存在")) {
       router.replace("/not-found");
@@ -84,14 +60,7 @@ export default function RoomPage() {
     return `${window.location.origin}/room/${roomId}`;
   }, [roomId]);
 
-  const isHost = useMemo(
-    () =>
-      isHostClient({
-        currentClientId: clientId,
-        hostClientId: room?.hostClientId,
-      }),
-    [clientId, room?.hostClientId]
-  );
+  const isHost = room?.isHost ?? false;
 
   const handleShare = async () => {
     if (!shareLink) return;
@@ -112,8 +81,7 @@ export default function RoomPage() {
 
   const handleAddPlayer = useCallback(
     async (name: string) => {
-      if (!roomId || !roomRef.current) throw new Error("房间信息尚未加载");
-      await addPlayer(roomId, roomRef.current.config, name);
+      await sendRoomCommand(roomId, { type: "add", name });
     },
     [roomId]
   );
@@ -121,7 +89,7 @@ export default function RoomPage() {
   const handleDeletePlayer = async () => {
     if (!roomId || !deleteTarget) return;
     try {
-      await deletePlayer(roomId, deleteTarget.id, deleteTarget.name);
+      await sendRoomCommand(roomId, { type: "delete", playerId: deleteTarget.id });
       setDeleteTarget(null);
       toast.success("玩家已删除");
     } catch (err) {
@@ -133,60 +101,32 @@ export default function RoomPage() {
 
   const commitHands = useCallback(
     async (player: Player, hands: number) => {
-      const roomValue = roomRef.current;
-      if (!roomId || !roomValue) throw new Error("房间信息尚未加载");
-      if (!isHost) {
-        toast.error("仅房主可修改手数");
-        return;
-      }
-      const rounded = Math.round(hands);
-      const updates: Partial<Player> = {
-        hands: rounded,
-        buyInChips: rounded * roomValue.config.chipsPerHand,
-        buyInOverride: false,
-      };
-      const diff = rounded - player.hands;
-      const historyEntry =
-        diff === 0
-          ? undefined
-          : createHistoryEntry({
-              type: "hands_adjusted",
-              actorId: player.id,
-              actorName: player.name,
-              handsDelta: diff,
-              handsTotal: rounded,
-            });
-      const latestHistoryEntry = roomValue.history[0];
-      const mergedHistoryEntry =
-        historyEntry && latestHistoryEntry
-          ? coalesceHandsAdjustedHistory(
-              latestHistoryEntry,
-              historyEntry,
-              10_000
-            )
-          : null;
-      await updatePlayer(
-        roomId,
-        player.id,
-        updates,
-        mergedHistoryEntry ?? historyEntry
-      );
+      await sendRoomCommand(roomId, {
+        type: "hands",
+        playerId: player.id,
+        change: { total: Math.round(hands) },
+      });
     },
-    [isHost, roomId]
+    [roomId]
   );
 
   const adjustHands = useCallback(
     async (player: Player, delta: number) => {
-      await commitHands(player, player.hands + delta);
+      await sendRoomCommand(roomId, {
+        type: "hands",
+        playerId: player.id,
+        change: { delta },
+      });
     },
-    [commitHands]
+    [roomId]
   );
 
   const commitCurrentChips = useCallback(
     async (player: Player, chips: number) => {
-      if (!roomId) throw new Error("房间信息尚未加载");
-      await updatePlayer(roomId, player.id, {
-        currentChips: Math.round(chips * 100) / 100,
+      await sendRoomCommand(roomId, {
+        type: "chips",
+        playerId: player.id,
+        chips: Math.round(chips * 100) / 100,
       });
     },
     [roomId]
@@ -194,25 +134,14 @@ export default function RoomPage() {
 
   const commitName = useCallback(
     async (player: Player, name: string) => {
-      if (!roomId) throw new Error("房间信息尚未加载");
-      await updatePlayer(roomId, player.id, { name });
+      await sendRoomCommand(roomId, { type: "rename", playerId: player.id, name });
     },
     [roomId]
   );
 
   const handleSettingsSave = useCallback(
-    async (values: {
-      chipsPerHand: number;
-      chipValue: number;
-    }) => {
-      const roomValue = roomRef.current;
-      if (!roomId || !roomValue) throw new Error("房间信息尚未加载");
-      await saveRoomSettings(
-        roomId,
-        values,
-        roomValue.players,
-        roomValue.config.chipsPerHand
-      );
+    async (values: { chipsPerHand: number; chipValue: number }) => {
+      await sendRoomCommand(roomId, { type: "settings", ...values });
       toast.success("房间设置已更新");
     },
     [roomId]
@@ -226,12 +155,8 @@ export default function RoomPage() {
     if (creatingRoom) return;
     try {
       setCreatingRoom(true);
-      const nextClientId = getOrCreateClientId();
       const hostPin = generateHostPin();
-      const newRoomId = await createRoom(undefined, {
-        hostClientId: nextClientId ?? "",
-        hostPin,
-      });
+      const newRoomId = await createRoom(undefined, hostPin);
       toast.success(`新房间房主 PIN：${hostPin}`);
       router.push(`/room/${newRoomId}`);
     } catch (err) {
@@ -244,28 +169,20 @@ export default function RoomPage() {
     }
   };
 
-  const handleRevealHostPin = () => {
-    if (!room?.hostPin) {
-      toast.error("当前房间未设置房主 PIN");
-      return;
+  const handleRevealHostPin = async () => {
+    try {
+      const { pin } = await sendRoomCommand<{ pin: string }>(roomId, { type: "pin" });
+      toast.success(`房主 PIN：${pin}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "读取 PIN 失败。");
     }
-    toast.success(`房主 PIN：${room.hostPin}`);
   };
 
   const handleClaimHost = async (pin: string) => {
     if (!room || !roomId) return;
-    const nextClientId = getOrCreateClientId();
-    if (!nextClientId) {
-      toast.error("无法读取当前设备身份");
-      return;
-    }
-    if (!matchesHostPin(pin, room.hostPin)) {
-      toast.error("PIN 不正确");
-      return;
-    }
     try {
       setClaimingHost(true);
-      await claimRoomHost(roomId, nextClientId);
+      await sendRoomCommand(roomId, { type: "claim", pin: normalizeHostPin(pin) });
       setHostClaimOpen(false);
       toast.success("已认领房主权限");
     } catch (err) {

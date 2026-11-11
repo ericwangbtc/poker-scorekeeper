@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createRoom } from "@/lib/room-service";
-import { generateHostPin, getOrCreateClientId } from "@/lib/host-access";
+import { generateHostPin } from "@/lib/host-access";
 import { toast } from "sonner";
 
 export default function HomePage() {
@@ -22,10 +22,7 @@ export default function HomePage() {
       setIsCreating(true);
       setError(null);
       const hostPin = generateHostPin();
-      const roomId = await createRoom(displayName.trim() || undefined, {
-        hostClientId: getOrCreateClientId() ?? "",
-        hostPin,
-      });
+      const roomId = await createRoom(displayName.trim() || undefined, hostPin);
       toast.success(`房主 PIN：${hostPin}`);
       router.push(`/room/${roomId}`);
     } catch (err) {

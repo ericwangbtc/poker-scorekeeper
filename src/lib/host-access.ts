@@ -1,40 +1,21 @@
-const CLIENT_ID_KEY = "poker:clientId";
-const HOST_PIN_LENGTH = 6;
+const CLIENT_ID_KEY = "poker:roomClientId";
 
-const DEFAULT_RANDOM = () => Math.random();
-
-export const generateClientId = (random = DEFAULT_RANDOM) =>
-  `client_${random().toString(36).slice(2, 12)}`;
-
-export const generateHostPin = (random = DEFAULT_RANDOM) => {
-  const min = 10 ** (HOST_PIN_LENGTH - 1);
-  const max = 10 ** HOST_PIN_LENGTH - 1;
-  const value = Math.floor(random() * (max - min + 1)) + min;
-  return value.toString();
+export const generateClientId = () => {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  const id = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `client_${id}`;
 };
+
+export const generateHostPin = (
+  random = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32
+) => Math.floor(random() * 900_000 + 100_000).toString();
 
 export const normalizeHostPin = (value: string) => value.replace(/\D/g, "");
 
-export const matchesHostPin = (input: string, hostPin: string) =>
-  normalizeHostPin(input) === normalizeHostPin(hostPin);
-
-export const isHostClient = ({
-  currentClientId,
-  hostClientId,
-}: {
-  currentClientId: string | null | undefined;
-  hostClientId: string | null | undefined;
-}) => Boolean(currentClientId && hostClientId && currentClientId === hostClientId);
-
 export const getOrCreateClientId = () => {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  const existing = window.localStorage.getItem(CLIENT_ID_KEY);
-  if (existing) {
-    return existing;
-  }
-  const next = generateClientId();
-  window.localStorage.setItem(CLIENT_ID_KEY, next);
-  return next;
+  const existing = localStorage.getItem(CLIENT_ID_KEY);
+  if (existing && /^client_[a-f0-9]{32}$/.test(existing)) return existing;
+  const clientId = generateClientId();
+  localStorage.setItem(CLIENT_ID_KEY, clientId);
+  return clientId;
 };
