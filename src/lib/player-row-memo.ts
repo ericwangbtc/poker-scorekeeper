@@ -8,7 +8,7 @@ export interface PlayerRowMemoProps {
   toInputValue: (chips: number) => string;
   toCellLabel: (chips: number) => string;
   parseToChips: (value: string) => number | null;
-  onNameCommit: (player: Player, name: string) => Promise<void>;
+  onPlayerHistory: (player: Player) => void;
   onHandsCommit: (player: Player, hands: number) => Promise<void>;
   onHandsAdjust: (player: Player, delta: number) => Promise<void>;
   onCurrentCommit: (player: Player, chips: number) => Promise<void>;
@@ -33,7 +33,7 @@ export const arePlayerRowPropsEqual = (
   prev.toInputValue === next.toInputValue &&
   prev.toCellLabel === next.toCellLabel &&
   prev.parseToChips === next.parseToChips &&
-  prev.onNameCommit === next.onNameCommit &&
+  prev.onPlayerHistory === next.onPlayerHistory &&
   prev.onHandsCommit === next.onHandsCommit &&
   prev.onHandsAdjust === next.onHandsAdjust &&
   prev.onCurrentCommit === next.onCurrentCommit &&

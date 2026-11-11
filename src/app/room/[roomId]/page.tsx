@@ -29,6 +29,7 @@ export default function RoomPage() {
   const [displayMode, setDisplayMode] = useState<DisplayMode>("chip");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyPlayer, setHistoryPlayer] = useState<Player | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
@@ -132,12 +133,10 @@ export default function RoomPage() {
     [roomId]
   );
 
-  const commitName = useCallback(
-    async (player: Player, name: string) => {
-      await sendRoomCommand(roomId, { type: "rename", playerId: player.id, name });
-    },
-    [roomId]
-  );
+  const openPlayerHistory = useCallback((player: Player) => {
+    setHistoryPlayer(player);
+    setHistoryOpen(true);
+  }, []);
 
   const handleSettingsSave = useCallback(
     async (values: { chipsPerHand: number; chipValue: number }) => {
@@ -232,7 +231,10 @@ export default function RoomPage() {
         onShare={handleShare}
         onQrCode={() => setQrOpen(true)}
         onSettings={() => setSettingsOpen(true)}
-        onHistory={() => setHistoryOpen(true)}
+        onHistory={() => {
+          setHistoryPlayer(null);
+          setHistoryOpen(true);
+        }}
         onCreateRoom={() => setCreateConfirmOpen(true)}
         isHost={isHost}
         onRevealHostPin={handleRevealHostPin}
@@ -248,7 +250,7 @@ export default function RoomPage() {
           canEditHands={isHost}
           onAddPlayer={openAddPlayerDialog}
           onRequestDelete={setDeleteTarget}
-          onNameCommit={commitName}
+          onPlayerHistory={openPlayerHistory}
           onHandsCommit={commitHands}
           onHandsAdjust={adjustHands}
           onCurrentCommit={commitCurrentChips}
@@ -293,6 +295,7 @@ export default function RoomPage() {
         open={historyOpen}
         onOpenChange={setHistoryOpen}
         entries={room.history}
+        player={historyPlayer}
       />
 
       <QrCodeDialog open={qrOpen} onOpenChange={setQrOpen} link={shareLink} />

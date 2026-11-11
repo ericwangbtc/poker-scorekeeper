@@ -9,7 +9,6 @@ export const commandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("create"), name: name.optional(), pin }),
   z.object({ type: z.literal("add"), name }),
   z.object({ type: z.literal("delete"), playerId }),
-  z.object({ type: z.literal("rename"), playerId, name }),
   z.object({ type: z.literal("chips"), playerId, chips: z.number() }),
   z.object({
     type: z.literal("hands"),

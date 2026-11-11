@@ -4,6 +4,7 @@ import {
   coalesceHandsAdjustedHistory,
   createPlayerJoinedHistoryEntry,
   describeHistoryEntry,
+  filterPlayerChipHistory,
   groupHistoryEntries,
   formatRelativeTime,
 } from "./history.ts";
@@ -46,6 +47,20 @@ test("describeHistoryEntry formats player joined with current hands and +1", () 
   assert.equal(described.subtitle, "加入了房间（当前 2 手）");
   assert.equal(described.value, "+1");
   assert.equal(described.tone, "positive");
+});
+
+test("player chip history includes their hand and chip changes only", () => {
+  const entries = [
+    makeEntry({ id: "hands", actorId: "p1", type: "hands_adjusted", handsDelta: 1 }),
+    makeEntry({ id: "chips", actorId: "p1", type: "chips_changed" }),
+    makeEntry({ id: "other", actorId: "p2", type: "hands_adjusted" }),
+    makeEntry({ id: "joined", actorId: "p1", type: "player_joined" }),
+  ];
+
+  assert.deepEqual(filterPlayerChipHistory(entries, "p1").map(({ id }) => id), [
+    "hands",
+    "chips",
+  ]);
 });
 
 test("groupHistoryEntries groups by local day and keeps desc order", () => {

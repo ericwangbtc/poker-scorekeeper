@@ -32,7 +32,7 @@ const makeProps = (overrides: Partial<PlayerRowMemoProps> = {}): PlayerRowMemoPr
   toInputValue,
   toCellLabel,
   parseToChips,
-  onNameCommit: noopAsync,
+  onPlayerHistory: noop,
   onHandsCommit: noopAsync,
   onHandsAdjust: noopAsync,
   onCurrentCommit: noopAsync,

@@ -19,7 +19,8 @@ export interface Player {
 export type HistoryEventType =
   | "player_joined"
   | "player_left"
-  | "hands_adjusted";
+  | "hands_adjusted"
+  | "chips_changed";
 
 export interface HistoryEntry {
   id: string;
@@ -29,6 +30,8 @@ export interface HistoryEntry {
   actorName: string;
   handsDelta?: number;
   handsTotal?: number;
+  previousChips?: number;
+  currentChips?: number;
 }
 
 export interface RoomData {

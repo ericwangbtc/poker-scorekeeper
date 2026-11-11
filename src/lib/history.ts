@@ -121,6 +121,10 @@ export const coalesceHandsAdjustedHistory = (
   };
 };
 
+const formatChips = new Intl.NumberFormat("zh-CN", {
+  maximumFractionDigits: 2,
+});
+
 export const describeHistoryEntry = (entry: HistoryEntry): HistoryDescription => {
   if (entry.type === "player_joined") {
     const totalSuffix =
@@ -139,6 +143,18 @@ export const describeHistoryEntry = (entry: HistoryEntry): HistoryDescription =>
       subtitle: "离开了房间",
       value: "",
       tone: "negative",
+    };
+  }
+
+  if (entry.type === "chips_changed") {
+    const previous = entry.previousChips ?? 0;
+    const current = entry.currentChips ?? 0;
+    const delta = current - previous;
+    return {
+      title: entry.actorName,
+      subtitle: `剩余筹码 ${formatChips.format(previous)} → ${formatChips.format(current)}`,
+      value: `${delta > 0 ? "+" : ""}${formatChips.format(delta)}`,
+      tone: delta > 0 ? "positive" : "negative",
     };
   }
 
@@ -271,6 +287,13 @@ const formatDayLabel = (
     weekday: "short",
   }).format(new Date(timestamp));
 };
+
+export const filterPlayerChipHistory = (entries: HistoryEntry[], playerId: string) =>
+  entries.filter(
+    (entry) =>
+      entry.actorId === playerId &&
+      (entry.type === "chips_changed" || entry.type === "hands_adjusted")
+  );
 
 export const groupHistoryEntries = (
   entries: HistoryEntry[],

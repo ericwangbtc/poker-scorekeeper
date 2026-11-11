@@ -12,6 +12,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+function fitDialogToVisualViewport(dialog: HTMLDivElement | null) {
+  const viewport = window.visualViewport;
+  if (!dialog || !viewport) return;
+
+  const updatePosition = () => {
+    dialog.style.top = `${viewport.offsetTop + viewport.height / 2}px`;
+    dialog.style.maxHeight = `max(0px, calc(${viewport.height}px - 2rem))`;
+  };
+
+  updatePosition();
+  viewport.addEventListener("resize", updatePosition);
+  viewport.addEventListener("scroll", updatePosition);
+
+  return () => {
+    viewport.removeEventListener("resize", updatePosition);
+    viewport.removeEventListener("scroll", updatePosition);
+  };
+}
+
 interface AddPlayerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -56,7 +75,10 @@ export function AddPlayerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent
+        ref={fitDialogToVisualViewport}
+        className="max-h-[calc(100%-2rem)] max-w-sm overflow-y-auto overscroll-contain"
+      >
         <DialogHeader>
           <DialogTitle>添加玩家</DialogTitle>
           <DialogDescription>

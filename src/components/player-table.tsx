@@ -24,7 +24,7 @@ interface PlayerTableProps {
   canEditHands: boolean;
   onAddPlayer: () => void;
   onRequestDelete: (player: Player) => void;
-  onNameCommit: (player: Player, name: string) => Promise<void>;
+  onPlayerHistory: (player: Player) => void;
   onHandsCommit: (player: Player, hands: number) => Promise<void>;
   onHandsAdjust: (player: Player, delta: number) => Promise<void>;
   onCurrentCommit: (player: Player, chips: number) => Promise<void>;
@@ -42,7 +42,7 @@ export function PlayerTable({
   canEditHands,
   onAddPlayer,
   onRequestDelete,
-  onNameCommit,
+  onPlayerHistory,
   onHandsCommit,
   onHandsAdjust,
   onCurrentCommit,
@@ -116,7 +116,7 @@ export function PlayerTable({
                 toInputValue={toInputValue}
                 toCellLabel={toCellLabel}
                 parseToChips={parseToChips}
-                onNameCommit={onNameCommit}
+                onPlayerHistory={onPlayerHistory}
                 onHandsCommit={onHandsCommit}
                 onHandsAdjust={onHandsAdjust}
                 onCurrentCommit={onCurrentCommit}
@@ -157,23 +157,18 @@ const PlayerRow = memo(function PlayerRow({
   toInputValue,
   toCellLabel,
   parseToChips,
-  onNameCommit,
+  onPlayerHistory,
   onHandsCommit,
   onHandsAdjust,
   onCurrentCommit,
   onDelete,
 }: PlayerRowProps) {
-  const [nameDraft, setNameDraft] = useState(player.name);
   const [handsDraft, setHandsDraft] = useState(player.hands.toString());
   const [currentDraft, setCurrentDraft] = useState(
     toInputValue(player.currentChips)
   );
   const [isEditingCurrent, setIsEditingCurrent] = useState(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setNameDraft(player.name);
-  }, [player.name]);
 
   useEffect(() => {
     setHandsDraft(player.hands.toString());
@@ -220,20 +215,6 @@ const PlayerRow = memo(function PlayerRow({
   const derivedBuyIn = player.buyInOverride
     ? player.buyInChips
     : player.hands * config.chipsPerHand;
-
-  const commitName = async () => {
-    const trimmed = nameDraft.trim();
-    if (trimmed.length === 0) {
-      setNameDraft(player.name);
-      return;
-    }
-    if (trimmed === player.name) return;
-    try {
-      await onNameCommit(player, trimmed);
-    } catch {
-      setNameDraft(player.name);
-    }
-  };
 
   const commitHands = async () => {
     if (!canEditHands) {
@@ -326,14 +307,15 @@ const PlayerRow = memo(function PlayerRow({
   return (
     <tr className="h-[44px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
       <td className="px-1.5 text-center">
-        <Input
-          type="text"
-          value={nameDraft}
-          onChange={(e) => setNameDraft(e.target.value)}
-          onBlur={commitName}
-          onKeyDown={handleKeyDown(commitName, () => setNameDraft(player.name))}
-          className="h-9 w-full border-transparent bg-transparent px-1 text-center text-sm font-medium focus:border-primary focus:bg-muted"
-        />
+        <button
+          type="button"
+          onClick={() => onPlayerHistory(player)}
+          aria-label={`查看 ${player.name} 的筹码变更记录`}
+          aria-haspopup="dialog"
+          className="h-9 w-full cursor-pointer truncate rounded-md px-1 text-center text-sm font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          {player.name}
+        </button>
       </td>
       <td className="px-1">
         <div className="flex items-center justify-center gap-0.5">

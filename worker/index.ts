@@ -171,10 +171,15 @@ export class PokerRoom extends DurableObject<Env> {
           actorName: player.name,
         }));
         break;
-      case "rename":
-        player.name = action.name;
-        break;
       case "chips":
+        if (action.chips === player.currentChips) break;
+        room.history.unshift(createHistoryEntry({
+          type: "chips_changed",
+          actorId: player.id,
+          actorName: player.name,
+          previousChips: player.currentChips,
+          currentChips: action.chips,
+        }));
         player.currentChips = action.chips;
         break;
       case "hands": {

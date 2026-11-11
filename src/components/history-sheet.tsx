@@ -8,11 +8,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  filterPlayerChipHistory,
   GroupedHistoryItem,
   groupHistoryEntries,
   HistoryTone,
 } from "@/lib/history";
-import { HistoryEntry } from "@/lib/types";
+import { HistoryEntry, Player } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   HISTORY_GROUP_HEADER_CLASS,
@@ -23,6 +24,7 @@ interface HistorySheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entries: HistoryEntry[];
+  player: Player | null;
 }
 
 const toneClass = (tone: HistoryTone) => {
@@ -74,27 +76,32 @@ export function HistorySheet({
   open,
   onOpenChange,
   entries,
+  player,
 }: HistorySheetProps) {
+  const playerId = player?.id;
   const groupedEntries = useMemo(() => {
-    if (!open || entries.length === 0) {
-      return [];
-    }
-    return groupHistoryEntries(entries);
-  }, [entries, open]);
+    const visibleEntries = playerId
+      ? filterPlayerChipHistory(entries, playerId)
+      : entries;
+    return groupHistoryEntries(visibleEntries);
+  }, [entries, playerId]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
         className="max-h-[85vh]"
+        aria-describedby={undefined}
       >
         <SheetHeader className="mb-4">
-          <SheetTitle>历史记录</SheetTitle>
+          <SheetTitle className="break-all pr-8">
+            {player ? `${player.name}的筹码变更记录` : "历史记录"}
+          </SheetTitle>
         </SheetHeader>
         <div className="max-h-[70vh] overflow-y-auto px-4">
-          {entries.length === 0 ? (
+          {groupedEntries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              暂无历史记录。
+              {player ? "暂无筹码变更记录。" : "暂无历史记录。"}
             </p>
           ) : (
             <div className="space-y-4 pb-8">
