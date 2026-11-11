@@ -85,15 +85,15 @@ export function PlayerTable({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <table className="w-full table-fixed text-sm">
+      <div className="@container overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full min-w-80 table-fixed text-sm">
           <colgroup>
-            <col className="w-[26%]" />
-            <col className="w-[18%]" />
-            <col className="w-[15%]" />
-            <col className="w-[18%]" />
-            <col className="w-[14%]" />
-            <col className="w-[9%]" />
+            <col />
+            <col className="w-24 @[30rem]:w-28" />
+            <col className="w-[max(3rem,15cqw)]" />
+            <col className="w-[max(3rem,18cqw)]" />
+            <col className="w-[max(3rem,14cqw)]" />
+            <col className="w-10" />
           </colgroup>
           <thead className="bg-muted text-[11px] font-medium uppercase text-muted-foreground">
             <tr>
@@ -341,7 +341,7 @@ const PlayerRow = memo(function PlayerRow({
             type="button"
             onClick={() => handleAdjustHands(-1)}
             disabled={!canEditHands}
-            className="flex h-8 w-7 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
+            className="flex h-8 w-6 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all @[30rem]:w-7"
           >
             −
           </button>
@@ -356,7 +356,7 @@ const PlayerRow = memo(function PlayerRow({
               setHandsDraft(player.hands.toString())
             )}
             className={cn(
-              "h-8 w-10 border-transparent bg-transparent px-0 text-center text-sm font-bold focus:border-primary focus:bg-muted",
+              "h-8 w-8 shrink-0 border-transparent bg-transparent px-0 text-center text-sm font-bold focus:border-primary focus:bg-muted @[30rem]:w-10",
               !canEditHands && "opacity-60"
             )}
           />
@@ -364,14 +364,14 @@ const PlayerRow = memo(function PlayerRow({
             type="button"
             onClick={() => handleAdjustHands(1)}
             disabled={!canEditHands}
-            className="flex h-8 w-7 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all"
+            className="flex h-8 w-6 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all @[30rem]:w-7"
           >
             +
           </button>
         </div>
       </td>
       <td className="px-1.5 text-center">
-        <span className="inline-flex h-7 items-center justify-center rounded bg-muted px-2 text-xs font-medium text-muted-foreground tabular-nums">
+        <span className="inline-block max-w-full rounded bg-muted px-1 py-1.5 text-xs font-medium text-muted-foreground tabular-nums [overflow-wrap:anywhere] @[30rem]:px-2">
           {toCellLabel(derivedBuyIn)}
         </span>
       </td>
@@ -401,7 +401,7 @@ const PlayerRow = memo(function PlayerRow({
       </td>
       <td
         className={cn(
-          "px-1.5 text-center text-sm font-bold tabular-nums",
+          "px-1.5 text-center text-sm font-bold tabular-nums [overflow-wrap:anywhere]",
           profitChips > 0 && "text-profit",
           profitChips < 0 && "text-loss",
           profitChips === 0 && "text-muted-foreground"
