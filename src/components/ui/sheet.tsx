@@ -4,10 +4,10 @@ import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
 
+import { fitDialogToVisualViewport } from "@/lib/dialog-focus"
 import { cn } from "@/lib/utils"
 import {
   SHEET_BOTTOM_CONTENT_CLASS,
-  SHEET_BOTTOM_HANDLE_CLASS,
   SHEET_CLOSE_BUTTON_CLASS,
   SHEET_FOOTER_CLASS,
 } from "@/lib/sheet-ui"
@@ -62,6 +62,7 @@ function SheetContent({
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
+        ref={fitDialogToVisualViewport}
         data-slot="sheet-content"
         className={cn(
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
@@ -73,20 +74,17 @@ function SheetContent({
             "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b",
           side === "bottom" &&
             cn(
-              "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
+              "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-[max(0px,calc(100%_-_var(--dialog-viewport-top,0px)_-_var(--dialog-viewport-height,100dvh)))] h-auto max-h-[min(85dvh,var(--dialog-viewport-height,100dvh))] border-t",
               SHEET_BOTTOM_CONTENT_CLASS
             ),
           className
         )}
         {...props}
       >
-        {side === "bottom" ? (
-          <div aria-hidden className={SHEET_BOTTOM_HANDLE_CLASS} />
-        ) : null}
         {children}
         <SheetPrimitive.Close className={SHEET_CLOSE_BUTTON_CLASS}>
           <XIcon className="size-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">关闭</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>

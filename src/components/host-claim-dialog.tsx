@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface HostClaimDialogProps {
+  onCloseAutoFocus: (event: Event) => void;
   open: boolean;
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
@@ -21,6 +22,7 @@ interface HostClaimDialogProps {
 
 export function HostClaimDialog({
   open,
+  onCloseAutoFocus,
   submitting,
   onOpenChange,
   onSubmit,
@@ -41,7 +43,7 @@ export function HostClaimDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
         <DialogHeader>
           <DialogTitle>PIN 认领房主</DialogTitle>
           <DialogDescription>

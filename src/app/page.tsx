@@ -23,7 +23,7 @@ export default function HomePage() {
       setError(null);
       const hostPin = generateHostPin();
       const roomId = await createRoom(displayName.trim() || undefined, hostPin);
-      toast.success(`房主 PIN：${hostPin}`);
+      toast.success("房间已创建，可在房间内查看房主 PIN。");
       router.push(`/room/${roomId}`);
     } catch (err) {
       const message =
@@ -39,7 +39,7 @@ export default function HomePage() {
       <div className="mx-auto flex min-h-full max-w-md flex-col px-4 py-12">
         <header className="flex flex-col items-center gap-4 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/30">
-            <span className="text-3xl">🎰</span>
+            <span aria-hidden="true" className="font-serif text-4xl leading-none text-primary">♠</span>
           </div>
           <Badge variant="outline" className="border-primary/30 text-primary">
             Texas Hold&apos;em
@@ -60,16 +60,18 @@ export default function HomePage() {
                   htmlFor="displayName"
                   className="text-sm font-medium text-foreground"
                 >
-                  主持人昵称（可选）
+                  你的昵称（可选）
                 </label>
                 <Input
                   id="displayName"
                   type="text"
-                  placeholder="用于自动添加的首位玩家"
+                  aria-describedby="display-name-hint"
+                  maxLength={120}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="h-12"
                 />
+                <p id="display-name-hint" className="text-xs text-muted-foreground">填写后，你会自动加入牌局。</p>
               </div>
 
               {error && (

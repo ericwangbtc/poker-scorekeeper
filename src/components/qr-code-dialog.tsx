@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import QRCode from "qrcode";
 import {
@@ -12,9 +13,11 @@ import {
 } from "@/components/ui/dialog";
 
 interface QrCodeDialogProps {
+  onCloseAutoFocus: (event: Event) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   link: string;
+  onCopy: () => void;
 }
 
 function QrCodeDisplay({ link }: { link: string }) {
@@ -26,7 +29,7 @@ function QrCodeDisplay({ link }: { link: string }) {
     QRCode.toDataURL(link, {
       width: 280,
       margin: 2,
-      color: { dark: "#fbbf24", light: "#0a0d14" },
+      color: { dark: "#0a0d14", light: "#ffffff" },
     })
       .then((dataUrl: string) => {
         if (isMounted) setQrDataUrl(dataUrl);
@@ -69,17 +72,18 @@ function QrCodeDisplay({ link }: { link: string }) {
   );
 }
 
-export function QrCodeDialog({ open, onOpenChange, link }: QrCodeDialogProps) {
+export function QrCodeDialog({ open, onOpenChange, link, onCopy, onCloseAutoFocus }: QrCodeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>扫码加入</DialogTitle>
+          <DialogTitle>邀请加入房间</DialogTitle>
           <DialogDescription>
-            扫码即可加入房间，适合现场快速分享。
+            扫描二维码或打开房间链接即可加入。
           </DialogDescription>
         </DialogHeader>
-        <QrCodeDisplay link={link} />
+        {open && link && <QrCodeDisplay link={link} />}
+        <Button onClick={onCopy} disabled={!link}>复制房间链接</Button>
       </DialogContent>
     </Dialog>
   );

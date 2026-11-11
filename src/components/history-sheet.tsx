@@ -14,6 +14,7 @@ import {
   HistoryTone,
 } from "@/lib/history";
 import { HistoryEntry, Player } from "@/lib/types";
+import { focusDialogHeading } from "@/lib/dialog-focus";
 import { cn } from "@/lib/utils";
 import {
   HISTORY_GROUP_HEADER_CLASS,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/sheet-ui";
 
 interface HistorySheetProps {
+  onCloseAutoFocus: (event: Event) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entries: HistoryEntry[];
@@ -74,6 +76,7 @@ const HistoryRow = memo(function HistoryRow({ item }: { item: GroupedHistoryItem
 
 export function HistorySheet({
   open,
+  onCloseAutoFocus,
   onOpenChange,
   entries,
   player,
@@ -89,22 +92,24 @@ export function HistorySheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
+        onCloseAutoFocus={onCloseAutoFocus}
         side="bottom"
-        className="max-h-[85vh]"
+        className="gap-0"
+        onOpenAutoFocus={focusDialogHeading}
         aria-describedby={undefined}
       >
-        <SheetHeader className="mb-4">
-          <SheetTitle className="break-all pr-8">
+        <SheetHeader className="shrink-0 border-b border-border/50 pr-14">
+          <SheetTitle data-dialog-heading tabIndex={-1} className="break-words outline-none">
             {player ? `${player.name}的筹码变更记录` : "历史记录"}
           </SheetTitle>
         </SheetHeader>
-        <div className="max-h-[70vh] overflow-y-auto px-4">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-4">
           {groupedEntries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               {player ? "暂无筹码变更记录。" : "暂无历史记录。"}
             </p>
           ) : (
-            <div className="space-y-4 pb-8">
+            <div className="space-y-4 pb-5 pt-2">
               {groupedEntries.map((section) => (
                 <section key={section.key}>
                   <div className={HISTORY_GROUP_HEADER_CLASS}>

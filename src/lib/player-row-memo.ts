@@ -8,11 +8,11 @@ export interface PlayerRowMemoProps {
   toInputValue: (chips: number) => string;
   toCellLabel: (chips: number) => string;
   parseToChips: (value: string) => number | null;
-  onPlayerHistory: (player: Player) => void;
+  onPlayerHistory: (player: Player, trigger: HTMLButtonElement) => void;
   onHandsCommit: (player: Player, hands: number) => Promise<void>;
   onHandsAdjust: (player: Player, delta: number) => Promise<void>;
   onCurrentCommit: (player: Player, chips: number) => Promise<void>;
-  onDelete: (player: Player) => void;
+  onDelete: (player: Player, trigger: HTMLButtonElement) => void;
 }
 
 export const arePlayerRowPropsEqual = (

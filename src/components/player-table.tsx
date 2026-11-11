@@ -3,10 +3,10 @@
 import {
   memo,
   useCallback,
-  useEffect,
   useState,
   useRef,
-  KeyboardEvent,
+  type KeyboardEvent,
+  type MouseEvent,
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,12 +22,19 @@ interface PlayerTableProps {
   config: RoomConfig;
   displayMode: DisplayMode;
   canEditHands: boolean;
-  onAddPlayer: () => void;
-  onRequestDelete: (player: Player) => void;
-  onPlayerHistory: (player: Player) => void;
+  onAddPlayer: (event: MouseEvent<HTMLButtonElement>) => void;
+  onRequestDelete: (player: Player, trigger: HTMLButtonElement) => void;
+  onPlayerHistory: (player: Player, trigger: HTMLButtonElement) => void;
   onHandsCommit: (player: Player, hands: number) => Promise<void>;
   onHandsAdjust: (player: Player, delta: number) => Promise<void>;
   onCurrentCommit: (player: Player, chips: number) => Promise<void>;
+}
+
+function keepHandInputFocused(event: MouseEvent<HTMLButtonElement>) {
+  const active = document.activeElement;
+  if (active instanceof HTMLInputElement && event.currentTarget.parentElement?.contains(active)) {
+    event.preventDefault();
+  }
 }
 
 const stripTrailingZeros = (value: number) => {
@@ -70,6 +77,7 @@ export function PlayerTable({
 
   const parseToChips = useCallback(
     (input: string) => {
+      if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(input.trim())) return null;
       const numeric = Number(input);
       if (!Number.isFinite(numeric)) return null;
       if (displayMode === "cash") {
@@ -85,7 +93,7 @@ export function PlayerTable({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="@container overflow-x-auto rounded-xl border border-border bg-card">
+      <div className="@container min-w-80 rounded-xl border border-border bg-card">
         <table className="w-full min-w-80 table-fixed text-sm">
           <colgroup>
             <col />
@@ -95,7 +103,7 @@ export function PlayerTable({
             <col className="w-[max(3rem,14cqw)]" />
             <col className="w-10" />
           </colgroup>
-          <thead className="bg-muted text-[11px] font-medium uppercase text-muted-foreground">
+          <thead className="sticky top-0 z-10 bg-muted text-[11px] font-medium uppercase text-muted-foreground">
             <tr>
               <th className="h-8 px-1.5 text-center">玩家</th>
               <th className="h-8 px-1.5 text-center">手数</th>
@@ -163,132 +171,57 @@ const PlayerRow = memo(function PlayerRow({
   onCurrentCommit,
   onDelete,
 }: PlayerRowProps) {
-  const [handsDraft, setHandsDraft] = useState(player.hands.toString());
-  const [currentDraft, setCurrentDraft] = useState(
-    toInputValue(player.currentChips)
-  );
-  const [isEditingCurrent, setIsEditingCurrent] = useState(false);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hands = useCellEdit(String(player.hands));
+  const current = useCellEdit(toInputValue(player.currentChips), `${displayMode}:${config.chipValue}`);
 
-  useEffect(() => {
-    setHandsDraft(player.hands.toString());
-  }, [player.hands]);
-
-  useEffect(() => {
-    if (!isEditingCurrent) {
-      setCurrentDraft(toInputValue(player.currentChips));
+  const commitHands = () => {
+    if (!canEditHands || hands.draft === null || !hands.draft.trim()) return;
+    const value = Number(hands.draft);
+    if (!/^[+-]?\d+$/.test(hands.draft.trim()) || !Number.isSafeInteger(value)) {
+      hands.setError("请输入整数手数。");
+      return;
     }
-  }, [isEditingCurrent, player.currentChips, toInputValue]);
-
-  // 防抖自动提交剩余筹码
-  useEffect(() => {
-    if (!isEditingCurrent) return;
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+    if (value === player.hands) {
+      hands.cancel();
+      return;
     }
+    void hands.save(() => onHandsCommit(player, value));
+  };
 
-    debounceTimerRef.current = setTimeout(() => {
-      const chips = parseToChips(currentDraft);
-      if (chips === null) return;
-      if (Math.abs(chips - player.currentChips) < 0.0001) return;
-      onCurrentCommit(player, chips).catch(() => {
-        setCurrentDraft(toInputValue(player.currentChips));
-      });
-    }, 800);
+  const commitCurrent = () => {
+    if (current.draft === null || !current.draft.trim()) return;
+    const chips = parseToChips(current.draft);
+    if (chips === null || !Number.isFinite(chips)) {
+      current.setError("请输入有效数字。");
+      return;
+    }
+    if (Math.abs(chips - player.currentChips) < 0.0001) {
+      current.cancel();
+      return;
+    }
+    void current.save(() => onCurrentCommit(player, chips));
+  };
 
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
+  const adjustHands = (delta: number) => {
+    if (!canEditHands) return;
+    const draft = hands.draft?.trim();
+    if (draft) {
+      const total = Number(draft) + delta;
+      if (!/^[+-]?\d+$/.test(draft) || !Number.isSafeInteger(total)) {
+        hands.setError("请输入有效的整数手数。");
+        return;
       }
-    };
-  }, [
-    currentDraft,
-    isEditingCurrent,
-    onCurrentCommit,
-    parseToChips,
-    player,
-    player.currentChips,
-    toInputValue,
-  ]);
+      hands.change(String(total));
+      void hands.save(() => onHandsCommit(player, total));
+    } else {
+      void hands.save(() => onHandsAdjust(player, delta));
+    }
+    navigator.vibrate?.(15);
+  };
 
   const derivedBuyIn = player.buyInOverride
     ? player.buyInChips
     : player.hands * config.chipsPerHand;
-
-  const commitHands = async () => {
-    if (!canEditHands) {
-      setHandsDraft(player.hands.toString());
-      return;
-    }
-    const numeric = Number(handsDraft);
-    if (!Number.isFinite(numeric)) {
-      setHandsDraft(player.hands.toString());
-      return;
-    }
-    if (numeric === player.hands) return;
-    try {
-      await onHandsCommit(player, numeric);
-    } catch {
-      setHandsDraft(player.hands.toString());
-    }
-  };
-
-  const commitCurrent = async () => {
-    // 清除防抖定时器，避免重复提交
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-
-    const chips = parseToChips(currentDraft);
-    if (chips === null) {
-      setCurrentDraft(toInputValue(player.currentChips));
-      setIsEditingCurrent(false);
-      return;
-    }
-    if (Math.abs(chips - player.currentChips) < 0.0001) {
-      setIsEditingCurrent(false);
-      return;
-    }
-    try {
-      await onCurrentCommit(player, chips);
-    } catch {
-      setCurrentDraft(toInputValue(player.currentChips));
-    } finally {
-      setIsEditingCurrent(false);
-    }
-  };
-
-  const handleKeyDown =
-    (commit: () => Promise<void> | void, reset: () => void) =>
-    async (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
-        event.currentTarget.blur();
-        await commit();
-      }
-      if (event.key === "Escape") {
-        reset();
-        event.currentTarget.blur();
-      }
-    };
-
-  const handleAdjustHands = async (delta: number) => {
-    if (!canEditHands) {
-      setHandsDraft(player.hands.toString());
-      return;
-    }
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(15);
-    }
-    try {
-      const next = player.hands + delta;
-      setHandsDraft(next.toString());
-      await onHandsAdjust(player, delta);
-    } catch {
-      setHandsDraft(player.hands.toString());
-    }
-  };
 
   const profitChips = player.currentChips - derivedBuyIn;
   const profitDisplay =
@@ -309,7 +242,7 @@ const PlayerRow = memo(function PlayerRow({
       <td className="px-1.5 text-center">
         <button
           type="button"
-          onClick={() => onPlayerHistory(player)}
+          onClick={(event) => onPlayerHistory(player, event.currentTarget)}
           aria-label={`查看 ${player.name} 的筹码变更记录`}
           aria-haspopup="dialog"
           className="h-9 w-full cursor-pointer truncate rounded-md px-1 text-center text-sm font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
@@ -318,39 +251,39 @@ const PlayerRow = memo(function PlayerRow({
         </button>
       </td>
       <td className="px-1">
-        <div className="flex items-center justify-center gap-0.5">
-          <button
-            type="button"
-            onClick={() => handleAdjustHands(-1)}
-            disabled={!canEditHands}
-            className="flex h-8 w-6 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all @[30rem]:w-7"
-          >
-            −
-          </button>
-          <Input
-            type="number"
-            inputMode="numeric"
-            value={handsDraft}
-            onChange={(e) => setHandsDraft(e.target.value)}
-            onBlur={commitHands}
-            disabled={!canEditHands}
-            onKeyDown={handleKeyDown(commitHands, () =>
-              setHandsDraft(player.hands.toString())
-            )}
-            className={cn(
-              "h-8 w-8 shrink-0 border-transparent bg-transparent px-0 text-center text-sm font-bold focus:border-primary focus:bg-muted @[30rem]:w-10",
-              !canEditHands && "opacity-60"
-            )}
-          />
-          <button
-            type="button"
-            onClick={() => handleAdjustHands(1)}
-            disabled={!canEditHands}
-            className="flex h-8 w-6 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background/50 text-sm text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-foreground active:scale-95 transition-all @[30rem]:w-7"
-          >
-            +
-          </button>
-        </div>
+        {canEditHands ? (
+          <>
+            <div className="flex items-center justify-center gap-0.5">
+              <Button variant="outline" size="icon" aria-label={`给 ${player.name} 减少一手`}
+                disabled={hands.pending}
+                onMouseDown={keepHandInputFocused}
+                onClick={() => adjustHands(-1)} className="size-6 shrink-0">
+                −
+              </Button>
+              <Input
+                type="text"
+                inputMode="numeric"
+                aria-label={`${player.name} 的手数`}
+                aria-invalid={!!hands.error}
+                value={hands.value}
+                readOnly={hands.pending}
+                onChange={(event) => hands.change(event.target.value)}
+                onBlur={hands.blur(commitHands)}
+                onKeyDown={hands.keyDown}
+                className="h-8 w-8 shrink-0 border-transparent bg-transparent px-0 text-center font-bold @[30rem]:w-10"
+              />
+              <Button variant="outline" size="icon" aria-label={`给 ${player.name} 增加一手`}
+                disabled={hands.pending}
+                onMouseDown={keepHandInputFocused}
+                onClick={() => adjustHands(1)} className="size-6 shrink-0">
+                +
+              </Button>
+            </div>
+            <CellStatus edit={hands} onRetry={hands.draft !== null ? commitHands : undefined} />
+          </>
+        ) : (
+          <span className="block text-center font-semibold">{player.hands}</span>
+        )}
       </td>
       <td className="px-1.5 text-center">
         <span className="inline-block max-w-full rounded bg-muted px-1 py-1.5 text-xs font-medium text-muted-foreground tabular-nums [overflow-wrap:anywhere] @[30rem]:px-2">
@@ -359,27 +292,19 @@ const PlayerRow = memo(function PlayerRow({
       </td>
       <td className="px-1.5 text-center">
         <Input
-          type="number"
+          type="text"
           inputMode="decimal"
+          aria-label={`${player.name} 的剩余${displayMode === "cash" ? "金额" : "筹码"}`}
+          aria-invalid={!!current.error}
           placeholder="输入"
-          value={currentDraft}
-          onFocus={() => setIsEditingCurrent(true)}
-          onChange={(e) => setCurrentDraft(e.target.value)}
-          onBlur={commitCurrent}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") e.currentTarget.blur();
-            if (e.key === "Escape") {
-              if (debounceTimerRef.current) {
-                clearTimeout(debounceTimerRef.current);
-                debounceTimerRef.current = null;
-              }
-              setCurrentDraft(toInputValue(player.currentChips));
-              setIsEditingCurrent(false);
-              e.currentTarget.blur();
-            }
-          }}
-          className="h-9 w-full border-transparent bg-muted/50 px-1.5 text-center text-sm font-semibold focus:border-primary focus:bg-card"
+          value={current.value}
+          readOnly={current.pending}
+          onChange={(event) => current.change(event.target.value)}
+          onBlur={current.blur(commitCurrent)}
+          onKeyDown={current.keyDown}
+          className="h-9 w-full border-transparent bg-muted/50 px-1.5 text-center font-semibold focus:border-primary focus:bg-card"
         />
+        <CellStatus edit={current} onRetry={commitCurrent} />
       </td>
       <td
         className={cn(
@@ -394,7 +319,7 @@ const PlayerRow = memo(function PlayerRow({
       <td className="px-1 text-center">
         <button
           type="button"
-          onClick={() => onDelete(player)}
+          onClick={(event) => onDelete(player, event.currentTarget)}
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
           ✕
@@ -403,3 +328,96 @@ const PlayerRow = memo(function PlayerRow({
     </tr>
   );
 }, arePlayerRowPropsEqual);
+
+function useCellEdit(serverValue: string, unit?: string) {
+  const [input, setDraft] = useState<{ value: string; unit?: string } | null>(null);
+  const draft = input?.unit === unit ? input?.value ?? null : null;
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const saving = useRef(false);
+  const skipBlur = useRef(false);
+
+  const cancel = () => {
+    setDraft(null);
+    setStatus("idle");
+    setError(null);
+  };
+
+  return {
+    draft,
+    value: draft ?? serverValue,
+    pending: status === "saving",
+    status,
+    error: input && draft === null ? null : error,
+    setError,
+    cancel,
+    change(value: string) {
+      setDraft({ value, unit });
+      setStatus("idle");
+      setError(null);
+    },
+    async save(commit: () => Promise<void>) {
+      if (saving.current) return;
+      saving.current = true;
+      setStatus("saving");
+      setError(null);
+      try {
+        await commit();
+        setDraft(null);
+        setStatus("saved");
+      } catch (err) {
+        setStatus("failed");
+        setError(err instanceof Error ? err.message : "保存失败，请重试。");
+      } finally {
+        saving.current = false;
+      }
+    },
+    blur(commit: () => void) {
+      return () => {
+        if (skipBlur.current) {
+          skipBlur.current = false;
+          return;
+        }
+        if (draft !== null && !draft.trim()) {
+          cancel();
+          return;
+        }
+        commit();
+      };
+    },
+    keyDown(event: KeyboardEvent<HTMLInputElement>) {
+      if (event.nativeEvent.isComposing || saving.current) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        skipBlur.current = true;
+        cancel();
+        event.currentTarget.blur();
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.currentTarget.blur();
+      }
+    },
+  };
+}
+
+function CellStatus({
+  edit,
+  onRetry,
+}: {
+  edit: ReturnType<typeof useCellEdit>;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="text-center text-[11px] leading-tight [overflow-wrap:anywhere]">
+      <p role="status" className={cn(edit.error ? "text-destructive" : "text-muted-foreground")}>
+        {edit.error ?? (edit.pending ? "保存中…" : edit.status === "saved" ? "已同步" : "")}
+      </p>
+      {edit.error && edit.status === "failed" && onRetry && (
+        <button type="button" onClick={onRetry} className="py-1 text-primary underline">
+          重试
+        </button>
+      )}
+    </div>
+  );
+}

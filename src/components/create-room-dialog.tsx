@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface CreateRoomDialogProps {
+  onCloseAutoFocus: (event: Event) => void;
   open: boolean;
   isLoading: boolean;
   onCancel: () => void;
@@ -20,13 +21,14 @@ interface CreateRoomDialogProps {
 
 export function CreateRoomDialog({
   open,
+  onCloseAutoFocus,
   isLoading,
   onCancel,
   onConfirm,
 }: CreateRoomDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <AlertDialogContent className="max-w-sm">
+      <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle>创建新房间</AlertDialogTitle>
           <AlertDialogDescription>

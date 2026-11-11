@@ -1,24 +1,24 @@
 "use client";
 
+import type { MouseEventHandler } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DisplayMode } from "@/lib/types";
-import { History, QrCode, Settings, Share2 } from "lucide-react";
+import { History, Settings, Share2 } from "lucide-react";
 
 interface RoomHeaderProps {
   roomId: string;
   hintMessage: string | null;
   displayMode: DisplayMode;
   onDisplayModeChange: (mode: DisplayMode) => void;
-  onShare: () => void;
-  onQrCode: () => void;
-  onSettings: () => void;
-  onHistory: () => void;
-  onCreateRoom: () => void;
+  onInvite: MouseEventHandler<HTMLButtonElement>;
+  onSettings: MouseEventHandler<HTMLButtonElement>;
+  onHistory: MouseEventHandler<HTMLButtonElement>;
+  onCreateRoom: MouseEventHandler<HTMLButtonElement>;
   isHost: boolean;
-  onRevealHostPin: () => void;
-  onClaimHost: () => void;
+  onRevealHostPin: MouseEventHandler<HTMLButtonElement>;
+  onClaimHost: MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
 }
 
@@ -27,8 +27,7 @@ export function RoomHeader({
   hintMessage,
   displayMode,
   onDisplayModeChange,
-  onShare,
-  onQrCode,
+  onInvite,
   onSettings,
   onHistory,
   onCreateRoom,
@@ -39,7 +38,7 @@ export function RoomHeader({
 }: RoomHeaderProps) {
   return (
     <header className="sticky top-0 z-20 w-full border-b border-border/50 bg-elevated/80 px-3 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-elevated/60">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <ToggleGroup
             type="single"
@@ -63,7 +62,7 @@ export function RoomHeader({
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
           <Badge
             variant="outline"
             className="border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary"
@@ -75,6 +74,7 @@ export function RoomHeader({
               variant="ghost"
               size="icon"
               onClick={onHistory}
+              aria-label="变更记录"
               disabled={disabled}
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
             >
@@ -82,26 +82,19 @@ export function RoomHeader({
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              onClick={onShare}
+              size="sm"
+              onClick={onInvite}
               disabled={disabled}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="h-8 gap-1 px-2 text-primary"
             >
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onQrCode}
-              disabled={disabled}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            >
-              <QrCode className="h-4 w-4" />
+              <Share2 aria-hidden="true" />
+              邀请
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={onSettings}
+              aria-label="房间设置"
               disabled={disabled}
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
             >
@@ -110,7 +103,7 @@ export function RoomHeader({
           </div>
         </div>
       </div>
-      <div className="mt-2 flex items-center justify-between">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           {hintMessage ?? "实时同步中..."}
         </p>
@@ -119,8 +112,9 @@ export function RoomHeader({
             variant="outline"
             className="border-border bg-muted/40 px-2 py-0.5 text-[11px]"
           >
-            {isHost ? "你是房主" : "手数只读"}
+            {isHost ? "房主" : "访客"}
           </Badge>
+          {!isHost && <span className="text-[11px] text-muted-foreground">仅房主可调整手数</span>}
           <Button
             size="sm"
             variant={isHost ? "outline" : "default"}

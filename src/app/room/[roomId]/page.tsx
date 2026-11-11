@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useRoomSubscription } from "@/hooks/use-room-subscription";
 import { createRoom, sendRoomCommand } from "@/lib/room-service";
@@ -18,6 +18,7 @@ import { CreateRoomDialog } from "@/components/create-room-dialog";
 import { SettingsSheet } from "@/components/settings-sheet";
 import { HistorySheet } from "@/components/history-sheet";
 import { QrCodeDialog } from "@/components/qr-code-dialog";
+import { HostPinDialog } from "@/components/host-pin-dialog";
 import { HostClaimDialog } from "@/components/host-claim-dialog";
 
 export default function RoomPage() {
@@ -31,12 +32,49 @@ export default function RoomPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyPlayer, setHistoryPlayer] = useState<Player | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [hostClaimOpen, setHostClaimOpen] = useState(false);
   const [claimingHost, setClaimingHost] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState<number>();
+  const tableScroll = useRef<HTMLElement>(null);
+  const dialogTrigger = useRef<HTMLButtonElement>(null);
+
+  const restoreDialogFocus = (event: Event) => {
+    event.preventDefault();
+    const trigger = dialogTrigger.current;
+    dialogTrigger.current = null;
+    if (trigger?.isConnected && !trigger.disabled) {
+      trigger.focus();
+    } else {
+      tableScroll.current?.focus({ preventScroll: true });
+    }
+  };
+
+  const openFrom = (setOpen: (open: boolean) => void) => (event: MouseEvent<HTMLButtonElement>) => {
+    dialogTrigger.current = event.currentTarget;
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const resize = () => setViewportHeight(viewport.scale === 1 ? viewport.height : undefined);
+    resize();
+    viewport.addEventListener("resize", resize);
+    return () => viewport.removeEventListener("resize", resize);
+  }, []);
+
+  useEffect(() => {
+    const input = document.activeElement;
+    if (input instanceof HTMLInputElement && tableScroll.current?.contains(input)) {
+      (input.closest("tr") ?? input).scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  }, [viewportHeight]);
+
   useEffect(() => {
     if (!loading && !room && error && error.includes("不存在")) {
       router.replace("/not-found");
@@ -67,6 +105,7 @@ export default function RoomPage() {
     if (!shareLink) return;
     try {
       await navigator.clipboard.writeText(shareLink);
+      setQrOpen(false);
       toast.success("房间链接已复制到剪贴板");
     } catch {
       toast.error("复制失败，请手动复制链接");
@@ -133,7 +172,8 @@ export default function RoomPage() {
     [roomId]
   );
 
-  const openPlayerHistory = useCallback((player: Player) => {
+  const openPlayerHistory = useCallback((player: Player, trigger: HTMLButtonElement) => {
+    dialogTrigger.current = trigger;
     setHistoryPlayer(player);
     setHistoryOpen(true);
   }, []);
@@ -146,8 +186,14 @@ export default function RoomPage() {
     [roomId]
   );
 
-  const openAddPlayerDialog = useCallback(() => {
+  const openAddPlayerDialog = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    dialogTrigger.current = event.currentTarget;
     setAddPlayerOpen(true);
+  }, []);
+
+  const openDeletePlayerDialog = useCallback((player: Player, trigger: HTMLButtonElement) => {
+    dialogTrigger.current = trigger;
+    setDeleteTarget(player);
   }, []);
 
   const handleCreateRoom = async () => {
@@ -156,7 +202,7 @@ export default function RoomPage() {
       setCreatingRoom(true);
       const hostPin = generateHostPin();
       const newRoomId = await createRoom(undefined, hostPin);
-      toast.success(`新房间房主 PIN：${hostPin}`);
+      toast.success("房间已创建，可在房间内查看房主 PIN。");
       router.push(`/room/${newRoomId}`);
     } catch (err) {
       const message =
@@ -165,15 +211,6 @@ export default function RoomPage() {
     } finally {
       setCreatingRoom(false);
       setCreateConfirmOpen(false);
-    }
-  };
-
-  const handleRevealHostPin = async () => {
-    try {
-      const { pin } = await sendRoomCommand<{ pin: string }>(roomId, { type: "pin" });
-      toast.success(`房主 PIN：${pin}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "读取 PIN 失败。");
     }
   };
 
@@ -222,34 +259,34 @@ export default function RoomPage() {
   if (!room) return null;
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-dvh flex-col overflow-hidden bg-background" style={{ height: viewportHeight }}>
       <RoomHeader
         roomId={roomId}
         hintMessage={hintMessage}
         displayMode={displayMode}
         onDisplayModeChange={handleDisplayModeChange}
-        onShare={handleShare}
-        onQrCode={() => setQrOpen(true)}
-        onSettings={() => setSettingsOpen(true)}
-        onHistory={() => {
+        onInvite={openFrom(setQrOpen)}
+        onSettings={openFrom(setSettingsOpen)}
+        onHistory={(event) => {
+          dialogTrigger.current = event.currentTarget;
           setHistoryPlayer(null);
           setHistoryOpen(true);
         }}
-        onCreateRoom={() => setCreateConfirmOpen(true)}
+        onCreateRoom={openFrom(setCreateConfirmOpen)}
         isHost={isHost}
-        onRevealHostPin={handleRevealHostPin}
-        onClaimHost={() => setHostClaimOpen(true)}
+        onRevealHostPin={openFrom(setPinOpen)}
+        onClaimHost={openFrom(setHostClaimOpen)}
         disabled={!room}
       />
 
-      <main className="flex-1 overflow-y-auto px-3 pb-20 pt-3">
+      <main ref={tableScroll} tabIndex={-1} className="min-h-0 flex-1 overflow-auto px-3 py-3 [scroll-padding-block:2.75rem_0.75rem]">
         <PlayerTable
           players={room.players}
           config={room.config}
           displayMode={displayMode}
           canEditHands={isHost}
           onAddPlayer={openAddPlayerDialog}
-          onRequestDelete={setDeleteTarget}
+          onRequestDelete={openDeletePlayerDialog}
           onPlayerHistory={openPlayerHistory}
           onHandsCommit={commitHands}
           onHandsAdjust={adjustHands}
@@ -264,12 +301,14 @@ export default function RoomPage() {
       />
 
       <AddPlayerDialog
+        onCloseAutoFocus={restoreDialogFocus}
         open={addPlayerOpen}
         onOpenChange={setAddPlayerOpen}
         onSubmit={handleAddPlayer}
       />
 
       <DeletePlayerDialog
+        onCloseAutoFocus={restoreDialogFocus}
         open={!!deleteTarget}
         playerName={deleteTarget?.name ?? ""}
         onCancel={() => setDeleteTarget(null)}
@@ -277,6 +316,7 @@ export default function RoomPage() {
       />
 
       <CreateRoomDialog
+        onCloseAutoFocus={restoreDialogFocus}
         open={createConfirmOpen}
         isLoading={creatingRoom}
         onCancel={() => setCreateConfirmOpen(false)}
@@ -284,6 +324,7 @@ export default function RoomPage() {
       />
 
       <SettingsSheet
+        onCloseAutoFocus={restoreDialogFocus}
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         chipsPerHand={room.config.chipsPerHand}
@@ -292,15 +333,19 @@ export default function RoomPage() {
       />
 
       <HistorySheet
+        onCloseAutoFocus={restoreDialogFocus}
         open={historyOpen}
         onOpenChange={setHistoryOpen}
         entries={room.history}
         player={historyPlayer}
       />
 
-      <QrCodeDialog open={qrOpen} onOpenChange={setQrOpen} link={shareLink} />
+      <QrCodeDialog onCloseAutoFocus={restoreDialogFocus} open={qrOpen} onOpenChange={setQrOpen} link={shareLink} onCopy={handleShare} />
+
+      <HostPinDialog onCloseAutoFocus={restoreDialogFocus} roomId={roomId} open={isHost && pinOpen} onOpenChange={setPinOpen} />
 
       <HostClaimDialog
+        onCloseAutoFocus={restoreDialogFocus}
         open={hostClaimOpen}
         submitting={claimingHost}
         onOpenChange={setHostClaimOpen}

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface DeletePlayerDialogProps {
+  onCloseAutoFocus: (event: Event) => void;
   open: boolean;
   playerName: string;
   onCancel: () => void;
@@ -21,6 +22,7 @@ interface DeletePlayerDialogProps {
 
 export function DeletePlayerDialog({
   open,
+  onCloseAutoFocus,
   playerName,
   onCancel,
   onConfirm,
@@ -38,7 +40,7 @@ export function DeletePlayerDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <AlertDialogContent className="max-w-sm">
+      <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus} className="max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle>确认删除</AlertDialogTitle>
           <AlertDialogDescription>
