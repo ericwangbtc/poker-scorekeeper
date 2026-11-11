@@ -333,7 +333,7 @@ const PlayerRow = memo(function PlayerRow({
 function useCellEdit(serverValue: string, unit?: string) {
   const [input, setDraft] = useState<{ value: string; unit?: string } | null>(null);
   const draft = input?.unit === unit ? input?.value ?? null : null;
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "failed">("idle");
   const [error, setError] = useState<string | null>(null);
   const saving = useRef(false);
   const skipBlur = useRef(false);
@@ -365,7 +365,7 @@ function useCellEdit(serverValue: string, unit?: string) {
       try {
         await commit();
         setDraft(null);
-        setStatus("saved");
+        setStatus("idle");
       } catch (err) {
         setStatus("failed");
         setError(err instanceof Error ? err.message : "保存失败，请重试。");
@@ -412,7 +412,7 @@ function CellStatus({
   return (
     <div className="text-center text-[11px] leading-tight [overflow-wrap:anywhere]">
       <p role="status" className={cn(edit.error ? "text-destructive" : "text-muted-foreground")}>
-        {edit.error ?? (edit.pending ? "保存中…" : edit.status === "saved" ? "已同步" : "")}
+        {edit.error ?? (edit.pending ? "保存中…" : "")}
       </p>
       {edit.error && edit.status === "failed" && onRetry && (
         <button type="button" onClick={onRetry} className="py-1 text-primary underline">
