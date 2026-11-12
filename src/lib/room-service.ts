@@ -1,6 +1,6 @@
 import type { RoomCommand } from "../../worker/commands";
-import { getOrCreateClientId } from "./host-access";
-import { generateRoomId } from "./id";
+import { getOrCreateClientId } from "./host-access.ts";
+import { generateRoomId } from "./id.ts";
 import type { RoomData } from "./types";
 
 const connectionError = "无法连接房间服务，正在重试。";
@@ -60,35 +60,84 @@ export function subscribeToRoom(
     return () => {};
   }
 
-  let socket: WebSocket;
+  let socket: WebSocket | undefined;
   let retry: ReturnType<typeof setTimeout> | undefined;
+  let watchdog: ReturnType<typeof setTimeout> | undefined;
+  let errorTimer: ReturnType<typeof setTimeout> | undefined;
   let stopped = false;
-  let delay = 500;
+  let delay = 250;
+
+  const reportFailure = () => {
+    // Keep brief handshake failures and reconnects out of the error UI.
+    errorTimer ??= setTimeout(() => {
+      errorTimer = undefined;
+      if (!stopped) onError(new Error(connectionError));
+    }, 3_000);
+  };
 
   const connect = () => {
-    socket = new WebSocket(url);
-    socket.onopen = () => {
-      if (!stopped) socket.send(clientId);
-    };
-    socket.onmessage = (event) => {
-      if (stopped) return;
-      const room = JSON.parse(event.data) as RoomData | null;
-      if (!room) stopped = true;
-      delay = 500;
-      onSnapshot(room);
-    };
-    socket.onclose = () => {
-      if (stopped) return;
-      onError(new Error(connectionError));
-      retry = setTimeout(connect, delay);
+    if (stopped) return;
+    let current: WebSocket;
+    const reconnect = () => {
+      if (stopped || retry !== undefined) return;
+      clearTimeout(watchdog);
+      reportFailure();
+      retry = setTimeout(() => {
+        retry = undefined;
+        connect();
+      }, delay);
       delay = Math.min(delay * 2, 10_000);
     };
+
+    try {
+      current = new WebSocket(url);
+      socket = current;
+    } catch {
+      reconnect();
+      return;
+    }
+
+    // An open socket is not ready until the server sends its first snapshot.
+    watchdog = setTimeout(() => {
+      current.onopen = null;
+      current.onmessage = null;
+      current.onclose = null;
+      current.close();
+      reconnect();
+    }, 8_000);
+    current.onopen = () => {
+      if (!stopped) current.send(clientId);
+    };
+    current.onmessage = (event) => {
+      if (stopped) return;
+      let room: RoomData | null;
+      try {
+        room = JSON.parse(event.data) as RoomData | null;
+      } catch {
+        current.close(1002, "Invalid snapshot");
+        return;
+      }
+      clearTimeout(watchdog);
+      clearTimeout(errorTimer);
+      errorTimer = undefined;
+      if (!room) stopped = true;
+      delay = 250;
+      onSnapshot(room);
+    };
+    current.onclose = reconnect;
   };
 
   connect();
   return () => {
     stopped = true;
     clearTimeout(retry);
-    socket.close();
+    clearTimeout(watchdog);
+    clearTimeout(errorTimer);
+    if (socket) {
+      socket.onopen = null;
+      socket.onmessage = null;
+      socket.onclose = null;
+      socket.close();
+    }
   };
 }

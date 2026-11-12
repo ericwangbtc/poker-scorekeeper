@@ -256,6 +256,12 @@ export default function RoomPage() {
         disabled={!room}
       />
 
+      {error && (
+        <div role="status" className="shrink-0 bg-muted px-3 py-2 text-center text-sm text-muted-foreground">
+          {error} 当前显示上次同步的数据。
+        </div>
+      )}
+
       <main ref={tableScroll} tabIndex={-1} className="min-h-0 flex-1 overflow-auto px-3 py-3 [scroll-padding-block:2.75rem_0.75rem]">
         <PlayerTable
           players={room.players}

@@ -21,7 +21,11 @@ export function useRoomSubscription(roomId?: string) {
     return subscribeToRoom(
       validRoomId,
       (room) => setState({ roomId: validRoomId, room, error: room ? null : "房间不存在或已过期。" }),
-      (error) => setState({ roomId: validRoomId, room: null, error: error.message })
+      (error) => setState((previous) => ({
+        roomId: validRoomId,
+        room: previous?.roomId === validRoomId ? previous.room : null,
+        error: error.message,
+      }))
     );
   }, [validRoomId]);
 

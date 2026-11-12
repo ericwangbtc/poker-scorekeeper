@@ -1,4 +1,4 @@
-import { ROOM_ID_LENGTH } from "./constants";
+import { ROOM_ID_LENGTH } from "./constants.ts";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
