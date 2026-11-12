@@ -3,15 +3,11 @@
 import type { MouseEventHandler } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { DisplayMode } from "@/lib/types";
 import { History, Settings, Share2 } from "lucide-react";
 
 interface RoomHeaderProps {
   roomId: string;
   hintMessage: string | null;
-  displayMode: DisplayMode;
-  onDisplayModeChange: (mode: DisplayMode) => void;
   onInvite: MouseEventHandler<HTMLButtonElement>;
   onSettings: MouseEventHandler<HTMLButtonElement>;
   onHistory: MouseEventHandler<HTMLButtonElement>;
@@ -25,8 +21,6 @@ interface RoomHeaderProps {
 export function RoomHeader({
   roomId,
   hintMessage,
-  displayMode,
-  onDisplayModeChange,
   onInvite,
   onSettings,
   onHistory,
@@ -38,30 +32,7 @@ export function RoomHeader({
 }: RoomHeaderProps) {
   return (
     <header className="sticky top-0 z-20 w-full border-b border-border/50 bg-elevated/80 px-3 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-elevated/60">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <ToggleGroup
-            type="single"
-            value={displayMode}
-            onValueChange={(v) => v && onDisplayModeChange(v as DisplayMode)}
-            className="rounded-full bg-muted/50 p-0.5"
-          >
-            <ToggleGroupItem
-              value="chip"
-              disabled={disabled}
-              className="rounded-full px-3 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-            >
-              筹码
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="cash"
-              disabled={disabled}
-              className="rounded-full px-3 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-            >
-              金额
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <div className="flex items-center gap-1.5">
           <Badge
             variant="outline"

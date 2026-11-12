@@ -24,10 +24,8 @@ const makeProps = (overrides: Partial<PlayerRowMemoProps> = {}): PlayerRowMemoPr
   player: makePlayer(),
   config: {
     chipsPerHand: 100,
-    chipValue: 0.1,
     createdAt: 1,
   },
-  displayMode: "chip",
   canEditHands: true,
   toInputValue,
   toCellLabel,

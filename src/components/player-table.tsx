@@ -2,7 +2,6 @@
 
 import {
   memo,
-  useCallback,
   useState,
   useRef,
   type KeyboardEvent,
@@ -10,7 +9,7 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DisplayMode, Player, RoomConfig } from "@/lib/types";
+import { Player, RoomConfig } from "@/lib/types";
 import {
   arePlayerRowPropsEqual,
   type PlayerRowMemoProps,
@@ -20,7 +19,6 @@ import { cn } from "@/lib/utils";
 interface PlayerTableProps {
   players: Player[];
   config: RoomConfig;
-  displayMode: DisplayMode;
   canEditHands: boolean;
   onAddPlayer: (event: MouseEvent<HTMLButtonElement>) => void;
   onRequestDelete: (player: Player, trigger: HTMLButtonElement) => void;
@@ -42,10 +40,15 @@ const stripTrailingZeros = (value: number) => {
   return value.toFixed(2).replace(/\.?0+$/, "");
 };
 
+function parseChipInput(input: string) {
+  if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(input.trim())) return null;
+  const numeric = Number(input);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 export function PlayerTable({
   players,
   config,
-  displayMode,
   canEditHands,
   onAddPlayer,
   onRequestDelete,
@@ -54,40 +57,9 @@ export function PlayerTable({
   onHandsAdjust,
   onCurrentCommit,
 }: PlayerTableProps) {
-  const toInputValue = useCallback(
-    (chips: number) => {
-      if (displayMode === "cash") {
-        return stripTrailingZeros(chips * config.chipValue);
-      }
-      return stripTrailingZeros(chips);
-    },
-    [config.chipValue, displayMode]
-  );
-
-  const toCellLabel = useCallback(
-    (chips: number) => {
-      if (displayMode === "cash") {
-        const cashValue = chips * config.chipValue;
-        return `¥${stripTrailingZeros(cashValue)}`;
-      }
-      return stripTrailingZeros(chips);
-    },
-    [config.chipValue, displayMode]
-  );
-
-  const parseToChips = useCallback(
-    (input: string) => {
-      if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(input.trim())) return null;
-      const numeric = Number(input);
-      if (!Number.isFinite(numeric)) return null;
-      if (displayMode === "cash") {
-        if (config.chipValue <= 0) return null;
-        return numeric / config.chipValue;
-      }
-      return numeric;
-    },
-    [config.chipValue, displayMode]
-  );
+  const toInputValue = stripTrailingZeros;
+  const toCellLabel = stripTrailingZeros;
+  const parseToChips = parseChipInput;
 
   const hasPlayers = players.length > 0;
 
@@ -119,7 +91,6 @@ export function PlayerTable({
                 key={player.id}
                 player={player}
                 config={config}
-                displayMode={displayMode}
                 canEditHands={canEditHands}
                 toInputValue={toInputValue}
                 toCellLabel={toCellLabel}
@@ -160,7 +131,6 @@ type PlayerRowProps = PlayerRowMemoProps;
 const PlayerRow = memo(function PlayerRow({
   player,
   config,
-  displayMode,
   canEditHands,
   toInputValue,
   toCellLabel,
@@ -172,7 +142,7 @@ const PlayerRow = memo(function PlayerRow({
   onDelete,
 }: PlayerRowProps) {
   const hands = useCellEdit(String(player.hands));
-  const current = useCellEdit(toInputValue(player.currentChips), `${displayMode}:${config.chipValue}`);
+  const current = useCellEdit(toInputValue(player.currentChips));
 
   const commitHands = () => {
     if (!canEditHands || hands.draft === null || !hands.draft.trim()) return;
@@ -224,18 +194,9 @@ const PlayerRow = memo(function PlayerRow({
     : player.hands * config.chipsPerHand;
 
   const profitChips = player.currentChips - derivedBuyIn;
-  const profitDisplay =
-    Math.abs(profitChips) < 0.0001
-      ? displayMode === "cash"
-        ? "¥0"
-        : "0"
-      : displayMode === "cash"
-      ? `${profitChips < 0 ? "-" : ""}¥${stripTrailingZeros(
-          Math.abs(profitChips) * config.chipValue
-        )}`
-      : `${profitChips >= 0 ? "+" : "-"}${stripTrailingZeros(
-          Math.abs(profitChips)
-        )}`;
+  const profitDisplay = Math.abs(profitChips) < 0.0001
+    ? "0"
+    : `${profitChips >= 0 ? "+" : "-"}${stripTrailingZeros(Math.abs(profitChips))}`;
 
   return (
     <tr className="h-[44px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
@@ -294,7 +255,7 @@ const PlayerRow = memo(function PlayerRow({
         <Input
           type="text"
           inputMode="decimal"
-          aria-label={`${player.name} 的剩余${displayMode === "cash" ? "金额" : "筹码"}`}
+          aria-label={`${player.name} 的剩余筹码`}
           aria-invalid={!!current.error}
           placeholder="输入"
           value={current.value}
@@ -335,9 +296,8 @@ const PlayerRow = memo(function PlayerRow({
   );
 }, arePlayerRowPropsEqual);
 
-function useCellEdit(serverValue: string, unit?: string) {
-  const [input, setDraft] = useState<{ value: string; unit?: string } | null>(null);
-  const draft = input?.unit === unit ? input?.value ?? null : null;
+function useCellEdit(serverValue: string) {
+  const [draft, setDraft] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "failed">("idle");
   const [error, setError] = useState<string | null>(null);
   const saving = useRef(false);
@@ -354,11 +314,11 @@ function useCellEdit(serverValue: string, unit?: string) {
     value: draft ?? serverValue,
     pending: status === "saving",
     status,
-    error: input && draft === null ? null : error,
+    error,
     setError,
     cancel,
     change(value: string) {
-      setDraft({ value, unit });
+      setDraft(value);
       setStatus("idle");
       setError(null);
     },

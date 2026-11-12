@@ -18,8 +18,7 @@ interface SettingsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   chipsPerHand: number;
-  chipValue: number;
-  onSave: (values: { chipsPerHand: number; chipValue: number }) => Promise<void>;
+  onSave: (values: { chipsPerHand: number }) => Promise<void>;
 }
 
 export function SettingsSheet({
@@ -27,32 +26,23 @@ export function SettingsSheet({
   onCloseAutoFocus,
   onOpenChange,
   chipsPerHand,
-  chipValue,
   onSave,
 }: SettingsSheetProps) {
   const [chips, setChips] = useState(`${chipsPerHand}`);
-  const [value, setValue] = useState(`${chipValue}`);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       setChips(`${chipsPerHand}`);
-      setValue(`${chipValue}`);
       setError(null);
     }
-  }, [chipValue, chipsPerHand, open]);
+  }, [chipsPerHand, open]);
 
   const isValid = useMemo(() => {
     const parsedChips = Number(chips);
-    const parsedValue = Number(value);
-    return (
-      Number.isFinite(parsedChips) &&
-      parsedChips > 0 &&
-      Number.isFinite(parsedValue) &&
-      parsedValue > 0
-    );
-  }, [chips, value]);
+    return Number.isFinite(parsedChips) && parsedChips > 0;
+  }, [chips]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -65,7 +55,6 @@ export function SettingsSheet({
     try {
       await onSave({
         chipsPerHand: Number(chips),
-        chipValue: Number(value),
       });
       onOpenChange(false);
     } catch (err) {
@@ -110,26 +99,6 @@ export function SettingsSheet({
                 onChange={(e) => setChips(e.target.value)}
                 className="h-12"
                 placeholder="500"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="chipValue"
-                className="text-sm font-medium text-foreground"
-              >
-                筹码单价 (元/个)
-              </label>
-              <Input
-                id="chipValue"
-                type="number"
-                inputMode="decimal"
-                min={0.01}
-                step={0.01}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="h-12"
-                placeholder="0.1"
               />
             </div>
 

@@ -1,9 +1,8 @@
-import type { DisplayMode, Player, RoomConfig } from "./types";
+import type { Player, RoomConfig } from "./types";
 
 export interface PlayerRowMemoProps {
   player: Player;
   config: RoomConfig;
-  displayMode: DisplayMode;
   canEditHands: boolean;
   toInputValue: (chips: number) => string;
   toCellLabel: (chips: number) => string;
@@ -27,8 +26,6 @@ export const arePlayerRowPropsEqual = (
   prev.player.buyInOverride === next.player.buyInOverride &&
   prev.player.order === next.player.order &&
   prev.config.chipsPerHand === next.config.chipsPerHand &&
-  prev.config.chipValue === next.config.chipValue &&
-  prev.displayMode === next.displayMode &&
   prev.canEditHands === next.canEditHands &&
   prev.toInputValue === next.toInputValue &&
   prev.toCellLabel === next.toCellLabel &&

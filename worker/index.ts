@@ -4,7 +4,6 @@ import { clientIdSchema, commandSchema, type RoomCommand } from "./commands";
 import {
   DAYS_TO_EXPIRE,
   DEFAULT_CHIPS_PER_HAND,
-  DEFAULT_CHIP_VALUE,
   MILLISECONDS_IN_DAY,
   ROOM_ID_LENGTH,
 } from "../src/lib/constants";
@@ -92,7 +91,6 @@ export class PokerRoom extends DurableObject<Env> {
         id: roomId,
         config: {
           chipsPerHand: DEFAULT_CHIPS_PER_HAND,
-          chipValue: DEFAULT_CHIP_VALUE,
           createdAt: now,
         },
         players: [],
@@ -149,7 +147,6 @@ export class PokerRoom extends DurableObject<Env> {
     }
     if (action.type === "settings") {
       room.config.chipsPerHand = action.chipsPerHand;
-      room.config.chipValue = action.chipValue;
       for (const player of room.players) {
         const buyIn = player.hands * action.chipsPerHand;
         if (!Number.isFinite(buyIn)) return failure("买入筹码超出范围。", 400);

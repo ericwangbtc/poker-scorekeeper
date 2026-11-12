@@ -1,13 +1,12 @@
 "use client";
 
-import { DisplayMode, Player, RoomConfig } from "@/lib/types";
+import { Player, RoomConfig } from "@/lib/types";
 import { calculateTotals } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 
 interface StatsFooterProps {
   players: Player[];
   config: RoomConfig;
-  displayMode: DisplayMode;
 }
 
 const stripTrailingZeros = (value: number) => {
@@ -15,37 +14,17 @@ const stripTrailingZeros = (value: number) => {
   return value.toFixed(2).replace(/\.?0+$/, "");
 };
 
-const formatTotal = (
-  chips: number,
-  displayMode: DisplayMode,
-  chipValue: number
-) => {
-  if (displayMode === "cash") {
-    return `¥${stripTrailingZeros(chips * chipValue)}`;
-  }
-  return stripTrailingZeros(chips);
-};
-
 export function StatsFooter({
   players,
   config,
-  displayMode,
 }: StatsFooterProps) {
   const totals = calculateTotals(players, config.chipsPerHand);
-  const totalBuyInLabel = formatTotal(
-    totals.totalBuyIn,
-    displayMode,
-    config.chipValue
-  );
-  const totalCurrentLabel = formatTotal(
-    totals.totalCurrent,
-    displayMode,
-    config.chipValue
-  );
-  const difference = formatTotal(Math.abs(totals.delta), displayMode, config.chipValue);
+  const totalBuyInLabel = stripTrailingZeros(totals.totalBuyIn);
+  const totalCurrentLabel = stripTrailingZeros(totals.totalCurrent);
+  const difference = stripTrailingZeros(Math.abs(totals.delta));
   const statusText = totals.isBalanced
     ? "✓ 账目平衡"
-    : `${totals.delta > 0 ? "多出" : "缺少"} ${difference}${displayMode === "chip" ? " 筹码" : ""}`;
+    : `${totals.delta > 0 ? "多出" : "缺少"} ${difference} 筹码`;
 
   return (
     <footer className="z-20 shrink-0 border-t border-border bg-elevated safe-area-bottom">

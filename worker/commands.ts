@@ -18,7 +18,6 @@ export const commandSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("settings"),
     chipsPerHand: z.number().min(1),
-    chipValue: z.number().min(0.01),
   }),
   z.object({ type: z.literal("claim"), pin }),
   z.object({ type: z.literal("pin") }),

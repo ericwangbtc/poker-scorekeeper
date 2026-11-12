@@ -4,10 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } fr
 import { useParams, useRouter } from "next/navigation";
 import { useRoomSubscription } from "@/hooks/use-room-subscription";
 import { createRoom, sendRoomCommand } from "@/lib/room-service";
-import { DisplayMode, Player } from "@/lib/types";
+import { Player } from "@/lib/types";
 import { toast } from "sonner";
 import { generateHostPin, normalizeHostPin } from "@/lib/host-access";
-import { resolveDisplayMode } from "@/lib/display-mode";
 
 import { RoomHeader } from "@/components/room-header";
 import { PlayerTable } from "@/components/player-table";
@@ -27,7 +26,6 @@ export default function RoomPage() {
   const roomId = params.roomId as string;
   const { room, loading, error } = useRoomSubscription(roomId);
 
-  const [displayMode, setDisplayMode] = useState<DisplayMode>("chip");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyPlayer, setHistoryPlayer] = useState<Player | null>(null);
@@ -85,15 +83,6 @@ export default function RoomPage() {
     setHistoryOpen(false);
   }, [roomId]);
 
-  useEffect(() => {
-    if (!roomId) {
-      setDisplayMode("chip");
-      return;
-    }
-    const stored = localStorage.getItem(`displayMode:${roomId}`);
-    setDisplayMode(resolveDisplayMode(stored));
-  }, [roomId]);
-
   const shareLink = useMemo(() => {
     if (!roomId || typeof window === "undefined") return "";
     return `${window.location.origin}/room/${roomId}`;
@@ -109,13 +98,6 @@ export default function RoomPage() {
       toast.success("房间链接已复制到剪贴板");
     } catch {
       toast.error("复制失败，请手动复制链接");
-    }
-  };
-
-  const handleDisplayModeChange = (mode: DisplayMode) => {
-    setDisplayMode(mode);
-    if (roomId) {
-      localStorage.setItem(`displayMode:${roomId}`, mode);
     }
   };
 
@@ -179,7 +161,7 @@ export default function RoomPage() {
   }, []);
 
   const handleSettingsSave = useCallback(
-    async (values: { chipsPerHand: number; chipValue: number }) => {
+    async (values: { chipsPerHand: number }) => {
       await sendRoomCommand(roomId, { type: "settings", ...values });
       toast.success("房间设置已更新");
     },
@@ -232,10 +214,7 @@ export default function RoomPage() {
 
   const hintMessage = useMemo(() => {
     if (!room) return null;
-    const { chipsPerHand, chipValue } = room.config;
-    return `每手 ${chipsPerHand} 筹码 · ¥${(chipsPerHand * chipValue).toFixed(
-      2
-    )}`;
+    return `每手 ${room.config.chipsPerHand} 筹码`;
   }, [room]);
 
   if (loading) {
@@ -263,8 +242,6 @@ export default function RoomPage() {
       <RoomHeader
         roomId={roomId}
         hintMessage={hintMessage}
-        displayMode={displayMode}
-        onDisplayModeChange={handleDisplayModeChange}
         onInvite={openFrom(setQrOpen)}
         onSettings={openFrom(setSettingsOpen)}
         onHistory={(event) => {
@@ -283,7 +260,6 @@ export default function RoomPage() {
         <PlayerTable
           players={room.players}
           config={room.config}
-          displayMode={displayMode}
           canEditHands={isHost}
           onAddPlayer={openAddPlayerDialog}
           onRequestDelete={openDeletePlayerDialog}
@@ -297,7 +273,6 @@ export default function RoomPage() {
       <StatsFooter
         players={room.players}
         config={room.config}
-        displayMode={displayMode}
       />
 
       <AddPlayerDialog
@@ -328,7 +303,6 @@ export default function RoomPage() {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         chipsPerHand={room.config.chipsPerHand}
-        chipValue={room.config.chipValue}
         onSave={handleSettingsSave}
       />
 
