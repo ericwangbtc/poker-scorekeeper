@@ -31,7 +31,7 @@ export function RoomHeader({
   disabled,
 }: RoomHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 w-full shrink-0 border-b border-border/50 bg-elevated/80 px-3 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-elevated/60">
+    <header className="@container sticky top-0 z-20 w-full shrink-0 border-b border-border/50 bg-elevated/80 px-3 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-elevated/60">
       <div className="flex items-center justify-between gap-2 whitespace-nowrap">
         <Badge
           variant="outline"
@@ -72,18 +72,17 @@ export function RoomHeader({
           </Button>
         </div>
       </div>
-      <div className="mt-2 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <p className="whitespace-nowrap text-xs text-muted-foreground">
+      <div className="mt-2 flex flex-nowrap items-center justify-between gap-1 whitespace-nowrap text-[clamp(8px,2.5cqw,12px)]">
+        <p className="shrink-0 whitespace-nowrap text-muted-foreground">
           {hintMessage ?? "实时同步中..."}
         </p>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        <div className="flex shrink-0 flex-nowrap items-center gap-1">
           <Badge
             variant="outline"
-            className="shrink-0 whitespace-nowrap border-border bg-muted/40 px-2 py-0.5 text-[11px]"
+            className="shrink-0 whitespace-nowrap border-border bg-muted/40 px-[0.5em] py-0.5 text-[1em]"
           >
             {isHost ? "房主" : "访客"}
           </Badge>
-          {!isHost && <span className="order-last w-full whitespace-nowrap text-[11px] text-muted-foreground sm:order-none sm:w-auto">仅房主可调整手数</span>}
           <Button
             size="sm"
             variant={isHost ? "outline" : "default"}
@@ -91,8 +90,8 @@ export function RoomHeader({
             disabled={disabled}
             className={
               isHost
-                ? "h-7 px-3 text-xs"
-                : "h-7 px-3 text-xs gold-gradient text-primary-foreground"
+                ? "h-7 shrink-0 px-[0.75em] text-[1em]"
+                : "h-7 shrink-0 px-[0.75em] text-[1em] gold-gradient text-primary-foreground"
             }
           >
             {isHost ? "查看 PIN" : "PIN 认领"}
@@ -101,10 +100,11 @@ export function RoomHeader({
             size="sm"
             onClick={onCreateRoom}
             disabled={disabled}
-            className="h-7 px-3 text-xs gold-gradient text-primary-foreground"
+            className="h-7 shrink-0 px-[0.75em] text-[1em] gold-gradient text-primary-foreground"
           >
             新建房间
           </Button>
+          {!isHost && <span className="shrink-0 whitespace-nowrap text-muted-foreground">仅房主可调整手数</span>}
         </div>
       </div>
     </header>

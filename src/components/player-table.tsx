@@ -68,10 +68,10 @@ export function PlayerTable({
       <div className="@container min-w-0 rounded-xl border border-border bg-card">
         <table className="w-full table-fixed text-xs @[26rem]:text-sm">
           <colgroup>
-            <col className={canEditHands ? "w-[18%]" : "w-[22%]"} />
-            <col className={canEditHands ? "w-[17%] @[26rem]:w-24" : "w-[12%]"} />
-            <col className={canEditHands ? "w-[17%]" : "w-[20%]"} />
-            <col className={canEditHands ? "w-[22%]" : "w-[24%]"} />
+            <col className={canEditHands ? "w-[24%]" : "w-[28%]"} />
+            <col className={canEditHands ? "w-[15%] @[26rem]:w-24" : "w-[10%]"} />
+            <col className={canEditHands ? "w-[15%]" : "w-[18%]"} />
+            <col className={canEditHands ? "w-[20%]" : "w-[22%]"} />
             <col className={canEditHands ? "w-[19%]" : "w-[22%]"} />
             {canEditHands && <col className="w-[7%]" />}
           </colgroup>
@@ -206,7 +206,7 @@ const PlayerRow = memo(function PlayerRow({
           onClick={(event) => onPlayerHistory(player, event.currentTarget)}
           aria-label={`查看 ${player.name} 的筹码变更记录`}
           aria-haspopup="dialog"
-          className="h-9 w-full cursor-pointer truncate rounded-md px-1 text-center text-xs @[26rem]:text-sm font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
+          className="min-h-9 w-full cursor-pointer rounded-md px-1 py-1 text-center whitespace-normal [overflow-wrap:anywhere] text-xs @[26rem]:text-sm font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
         >
           {player.name}
         </button>
@@ -268,7 +268,7 @@ const PlayerRow = memo(function PlayerRow({
           onChange={(event) => current.change(event.target.value)}
           onBlur={current.blur(commitCurrent)}
           onKeyDown={current.keyDown}
-          className="h-9 w-full border-transparent bg-muted/50 px-0.5 text-center font-semibold focus:border-primary focus:bg-card"
+          className="h-9 w-full border-transparent bg-muted/50 px-0.5 text-center text-sm font-medium focus:border-primary focus:bg-card focus:text-base md:focus:text-sm"
         />
         <CellStatus edit={current} onRetry={commitCurrent} />
       </td>
