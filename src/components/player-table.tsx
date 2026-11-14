@@ -207,7 +207,7 @@ const PlayerRow = memo(function PlayerRow({
           title={player.name}
           aria-label={`查看 ${player.name} 的筹码变更记录`}
           aria-haspopup="dialog"
-          className="min-h-9 w-full cursor-pointer truncate rounded-md px-1 py-1 text-center text-base @[26rem]:text-lg font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
+          className="min-h-9 w-full cursor-pointer truncate rounded-md px-1 py-1 text-center text-[15px] @[26rem]:text-[17px] font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
         >
           {player.name}
         </button>

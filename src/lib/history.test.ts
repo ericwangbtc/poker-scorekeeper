@@ -63,7 +63,7 @@ test("player history includes their joining and hand changes only", () => {
   ]);
 });
 
-test("groupHistoryEntries groups by local day and keeps desc order", () => {
+test("groupHistoryEntries groups by local day and keeps chronological order", () => {
   const entries: HistoryEntry[] = [
     makeEntry({ id: "1", timestamp: Date.UTC(2026, 2, 18, 10, 0, 0) }),
     makeEntry({ id: "2", timestamp: Date.UTC(2026, 2, 17, 23, 0, 0) }),
@@ -77,9 +77,9 @@ test("groupHistoryEntries groups by local day and keeps desc order", () => {
   });
 
   assert.equal(grouped.length, 2);
-  assert.equal(grouped[0].items[0].entry.id, "1");
-  assert.equal(grouped[0].items[1].entry.id, "3");
-  assert.equal(grouped[1].items[0].entry.id, "2");
+  assert.equal(grouped[0].items[0].entry.id, "2");
+  assert.equal(grouped[1].items[0].entry.id, "3");
+  assert.equal(grouped[1].items[1].entry.id, "1");
 });
 
 test("formatRelativeTime returns absolute date for older events", () => {
@@ -203,4 +203,19 @@ test("history separates joining from initial hands and hides remaining chip edit
 
 test("history with only remaining chip edits is empty", () => {
   assert.deepEqual(groupHistoryEntries([makeEntry({ type: "chips_changed" })]), []);
+});
+
+
+test("joining appears before initial hands and subsequent hand increases", () => {
+  const timestamp = Date.UTC(2026, 2, 18, 10);
+  const entries = [
+    makeEntry({ id: "later", type: "hands_adjusted", timestamp: timestamp + 1000, handsDelta: 1, handsTotal: 2 }),
+    makeEntry({ id: "joined", timestamp, handsTotal: 1 }),
+  ];
+  const items = groupHistoryEntries(entries).flatMap((section) => section.items);
+  assert.deepEqual(items.map((item) => item.description.subtitle), [
+    "加入房间",
+    "增加手数（当前 1 手）",
+    "增加手数（当前 2 手）",
+  ]);
 });

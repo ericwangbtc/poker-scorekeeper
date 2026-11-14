@@ -72,7 +72,7 @@ export function RoomHeader({
           </Button>
         </div>
       </div>
-      <div className="mt-2 flex flex-nowrap items-center justify-between gap-1 whitespace-nowrap text-[clamp(8px,2.5cqw,12px)]">
+      <div className="mt-2 flex flex-nowrap items-center justify-start gap-1 whitespace-nowrap text-[clamp(8px,2.5cqw,12px)]">
         <p className="shrink-0 whitespace-nowrap text-muted-foreground">
           {hintMessage ?? "实时同步中..."}
         </p>
