@@ -269,7 +269,7 @@ const PlayerRow = memo(function PlayerRow({
           onChange={(event) => current.change(event.target.value)}
           onBlur={current.blur(commitCurrent)}
           onKeyDown={current.keyDown}
-          className="h-9 w-full border-transparent bg-muted/50 px-0.5 text-center text-sm font-medium focus:border-primary focus:bg-card focus:text-base md:focus:text-sm"
+          className="h-9 w-full border-transparent bg-muted/50 px-0.5 text-center text-[13px] font-medium focus:border-primary focus:bg-card focus:text-base md:focus:text-[13px]"
         />
         <CellStatus edit={current} onRetry={commitCurrent} />
       </td>

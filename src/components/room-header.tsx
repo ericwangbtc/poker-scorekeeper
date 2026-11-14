@@ -76,7 +76,7 @@ export function RoomHeader({
         <p className="shrink-0 whitespace-nowrap text-muted-foreground">
           {hintMessage ?? "实时同步中..."}
         </p>
-        <div className="flex shrink-0 flex-nowrap items-center gap-1">
+        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1">
           <Badge
             variant="outline"
             className="shrink-0 whitespace-nowrap border-border bg-muted/40 px-[0.5em] py-0.5 text-[1em]"
@@ -91,8 +91,8 @@ export function RoomHeader({
             disabled={disabled}
             className={
               isHost
-                ? "h-7 shrink-0 px-[0.75em] text-[1em]"
-                : "h-7 shrink-0 px-[0.75em] text-[1em] gold-gradient text-primary-foreground"
+                ? "ml-auto h-7 shrink-0 px-[0.75em] text-[1em]"
+                : "ml-auto h-7 shrink-0 px-[0.75em] text-[1em] gold-gradient text-primary-foreground"
             }
           >
             {isHost ? "查看 PIN" : "PIN 认领"}
