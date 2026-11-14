@@ -83,6 +83,7 @@ export function RoomHeader({
           >
             {isHost ? "房主" : "访客"}
           </Badge>
+          {!isHost && <span className="shrink-0 whitespace-nowrap text-muted-foreground">仅房主可调整手数</span>}
           <Button
             size="sm"
             variant={isHost ? "outline" : "default"}
@@ -104,7 +105,6 @@ export function RoomHeader({
           >
             新建房间
           </Button>
-          {!isHost && <span className="shrink-0 whitespace-nowrap text-muted-foreground">仅房主可调整手数</span>}
         </div>
       </div>
     </header>

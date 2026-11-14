@@ -75,7 +75,7 @@ export function PlayerTable({
             <col className={canEditHands ? "w-[19%]" : "w-[22%]"} />
             {canEditHands && <col className="w-[7%]" />}
           </colgroup>
-          <thead className="sticky top-0 z-10 bg-muted text-[11px] font-medium uppercase text-muted-foreground">
+          <thead className="bg-muted text-[11px] font-medium uppercase text-muted-foreground">
             <tr>
               <th className="h-8 px-1 text-center">玩家</th>
               <th className="h-8 px-1 text-center">手数</th>
@@ -204,9 +204,10 @@ const PlayerRow = memo(function PlayerRow({
         <button
           type="button"
           onClick={(event) => onPlayerHistory(player, event.currentTarget)}
+          title={player.name}
           aria-label={`查看 ${player.name} 的筹码变更记录`}
           aria-haspopup="dialog"
-          className="min-h-9 w-full cursor-pointer rounded-md px-1 py-1 text-center whitespace-normal [overflow-wrap:anywhere] text-xs @[26rem]:text-sm font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
+          className="min-h-9 w-full cursor-pointer truncate rounded-md px-1 py-1 text-center text-base @[26rem]:text-lg font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
         >
           {player.name}
         </button>
