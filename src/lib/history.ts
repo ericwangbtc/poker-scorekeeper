@@ -302,17 +302,17 @@ export const groupHistoryEntries = (
 
   const sortedEntries = entries
     .filter((entry) => entry.type !== "chips_changed")
-    .sort((a, b) => a.timestamp - b.timestamp || a.id.localeCompare(b.id))
+    .sort((a, b) => b.timestamp - a.timestamp || b.id.localeCompare(a.id))
     .flatMap((entry): HistoryEntry[] => {
       if (entry.type !== "player_joined" || !entry.handsTotal) return [entry];
       return [
-        entry,
         {
           ...entry,
           id: `${entry.id}_initial_hands`,
           type: "hands_adjusted",
           handsDelta: entry.handsTotal,
         },
+        entry,
       ];
     });
 

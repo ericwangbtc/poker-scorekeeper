@@ -63,7 +63,7 @@ test("player history includes their joining and hand changes only", () => {
   ]);
 });
 
-test("groupHistoryEntries groups by local day and keeps chronological order", () => {
+test("groupHistoryEntries groups by local day and keeps newest entries first", () => {
   const entries: HistoryEntry[] = [
     makeEntry({ id: "1", timestamp: Date.UTC(2026, 2, 18, 10, 0, 0) }),
     makeEntry({ id: "2", timestamp: Date.UTC(2026, 2, 17, 23, 0, 0) }),
@@ -77,9 +77,9 @@ test("groupHistoryEntries groups by local day and keeps chronological order", ()
   });
 
   assert.equal(grouped.length, 2);
-  assert.equal(grouped[0].items[0].entry.id, "2");
-  assert.equal(grouped[1].items[0].entry.id, "3");
-  assert.equal(grouped[1].items[1].entry.id, "1");
+  assert.equal(grouped[0].items[0].entry.id, "1");
+  assert.equal(grouped[0].items[1].entry.id, "3");
+  assert.equal(grouped[1].items[0].entry.id, "2");
 });
 
 test("formatRelativeTime returns absolute date for older events", () => {
@@ -192,10 +192,10 @@ test("history separates joining from initial hands and hides remaining chip edit
   ];
   const items = groupHistoryEntries(entries).flatMap((section) => section.items);
   assert.equal(items.length, 2);
-  assert.equal(items[0].description.subtitle, "加入房间");
-  assert.equal(items[0].description.value, "");
-  assert.equal(items[1].description.subtitle, "增加手数（当前 1 手）");
-  assert.equal(items[1].description.value, "+1");
+  assert.equal(items[1].description.subtitle, "加入房间");
+  assert.equal(items[1].description.value, "");
+  assert.equal(items[0].description.subtitle, "增加手数（当前 1 手）");
+  assert.equal(items[0].description.value, "+1");
   assert.notEqual(items[0].entry.id, items[1].entry.id);
   assert.equal(items[0].entry.timestamp, items[1].entry.timestamp);
   assert.equal(entries.length, 2);
@@ -206,7 +206,7 @@ test("history with only remaining chip edits is empty", () => {
 });
 
 
-test("joining appears before initial hands and subsequent hand increases", () => {
+test("latest hand increases appear first and initial hands appear above joining", () => {
   const timestamp = Date.UTC(2026, 2, 18, 10);
   const entries = [
     makeEntry({ id: "later", type: "hands_adjusted", timestamp: timestamp + 1000, handsDelta: 1, handsTotal: 2 }),
@@ -214,8 +214,8 @@ test("joining appears before initial hands and subsequent hand increases", () =>
   ];
   const items = groupHistoryEntries(entries).flatMap((section) => section.items);
   assert.deepEqual(items.map((item) => item.description.subtitle), [
-    "加入房间",
-    "增加手数（当前 1 手）",
     "增加手数（当前 2 手）",
+    "增加手数（当前 1 手）",
+    "加入房间",
   ]);
 });
