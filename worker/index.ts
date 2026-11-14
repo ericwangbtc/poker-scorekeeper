@@ -112,6 +112,9 @@ export class PokerRoom extends DurableObject<Env> {
     if (action.type === "pin") {
       return isHost ? Response.json({ pin: room.pin }) : failure("仅房主可查看 PIN。", 403);
     }
+    if (action.type === "delete" && !isHost) {
+      return failure("仅房主可移除玩家。", 403);
+    }
     if (action.type === "hands" && !isHost) {
       return failure("仅房主可修改手数。", 403);
     }

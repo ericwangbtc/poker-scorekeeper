@@ -127,12 +127,10 @@ const formatChips = new Intl.NumberFormat("zh-CN", {
 
 export const describeHistoryEntry = (entry: HistoryEntry): HistoryDescription => {
   if (entry.type === "player_joined") {
-    const totalSuffix =
-      typeof entry.handsTotal === "number" ? `（当前 ${entry.handsTotal} 手）` : "";
     return {
       title: entry.actorName,
-      subtitle: `加入了房间${totalSuffix}`,
-      value: "+1",
+      subtitle: "加入房间",
+      value: "",
       tone: "positive",
     };
   }
@@ -292,7 +290,7 @@ export const filterPlayerChipHistory = (entries: HistoryEntry[], playerId: strin
   entries.filter(
     (entry) =>
       entry.actorId === playerId &&
-      (entry.type === "chips_changed" || entry.type === "hands_adjusted")
+      (entry.type === "player_joined" || entry.type === "hands_adjusted")
   );
 
 export const groupHistoryEntries = (
@@ -302,9 +300,21 @@ export const groupHistoryEntries = (
   const locale = options.locale ?? "zh-CN";
   const nowValue = options.now ?? Date.now();
 
-  const sortedEntries = [...entries].sort(
-    (a, b) => b.timestamp - a.timestamp || b.id.localeCompare(a.id)
-  );
+  const sortedEntries = entries
+    .filter((entry) => entry.type !== "chips_changed")
+    .sort((a, b) => b.timestamp - a.timestamp || b.id.localeCompare(a.id))
+    .flatMap((entry): HistoryEntry[] => {
+      if (entry.type !== "player_joined" || !entry.handsTotal) return [entry];
+      return [
+        entry,
+        {
+          ...entry,
+          id: `${entry.id}_initial_hands`,
+          type: "hands_adjusted",
+          handsDelta: entry.handsTotal,
+        },
+      ];
+    });
 
   const sectionByKey = new Map<string, GroupedHistorySection>();
 

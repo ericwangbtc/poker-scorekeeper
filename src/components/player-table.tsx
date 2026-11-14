@@ -65,24 +65,24 @@ export function PlayerTable({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="@container min-w-80 rounded-xl border border-border bg-card">
-        <table className="w-full min-w-80 table-fixed text-sm">
+      <div className="@container min-w-0 rounded-xl border border-border bg-card">
+        <table className="w-full table-fixed text-xs @[26rem]:text-sm">
           <colgroup>
-            <col />
-            <col className="w-24 @[30rem]:w-28" />
-            <col className="w-[max(3rem,15cqw)]" />
-            <col className="w-[max(3rem,18cqw)]" />
-            <col className="w-[max(3rem,14cqw)]" />
-            <col className="w-10" />
+            <col className={canEditHands ? "w-[18%]" : "w-[22%]"} />
+            <col className={canEditHands ? "w-[17%] @[26rem]:w-24" : "w-[12%]"} />
+            <col className={canEditHands ? "w-[17%]" : "w-[20%]"} />
+            <col className={canEditHands ? "w-[22%]" : "w-[24%]"} />
+            <col className={canEditHands ? "w-[19%]" : "w-[22%]"} />
+            {canEditHands && <col className="w-[7%]" />}
           </colgroup>
           <thead className="sticky top-0 z-10 bg-muted text-[11px] font-medium uppercase text-muted-foreground">
             <tr>
-              <th className="h-8 px-1.5 text-center">玩家</th>
-              <th className="h-8 px-1.5 text-center">手数</th>
-              <th className="h-8 px-1.5 text-center">买入</th>
-              <th className="h-8 px-1.5 text-center">剩余</th>
-              <th className="h-8 px-1.5 text-center">盈亏</th>
-              <th className="h-8 px-1.5 text-center"></th>
+              <th className="h-8 px-1 text-center">玩家</th>
+              <th className="h-8 px-1 text-center">手数</th>
+              <th className="h-8 px-1 text-center">买入</th>
+              <th className="h-8 px-1 text-center">剩余</th>
+              <th className="h-8 px-1 text-center">盈亏</th>
+              {canEditHands && <th className="h-8 px-0 text-center"></th>}
             </tr>
           </thead>
           <tbody>
@@ -105,7 +105,7 @@ export function PlayerTable({
             {!hasPlayers && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={canEditHands ? 6 : 5}
                   className="px-4 py-6 text-center text-sm text-muted-foreground"
                 >
                   还没有玩家，点击下方按钮添加第一位玩家。
@@ -200,25 +200,25 @@ const PlayerRow = memo(function PlayerRow({
 
   return (
     <tr className="h-[44px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
-      <td className="px-1.5 text-center">
+      <td className="px-0.5 text-center">
         <button
           type="button"
           onClick={(event) => onPlayerHistory(player, event.currentTarget)}
           aria-label={`查看 ${player.name} 的筹码变更记录`}
           aria-haspopup="dialog"
-          className="h-9 w-full cursor-pointer truncate rounded-md px-1 text-center text-sm font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
+          className="h-9 w-full cursor-pointer truncate rounded-md px-1 text-center text-xs @[26rem]:text-sm font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
         >
           {player.name}
         </button>
       </td>
-      <td className="px-1">
+      <td className="px-0.5">
         {canEditHands ? (
           <>
-            <div className="flex items-center justify-center gap-0.5">
+            <div className="grid grid-cols-2 items-center justify-items-center gap-0.5 @[26rem]:flex @[26rem]:justify-center">
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 减少一手`}
                 disabled={hands.pending}
                 onMouseDown={keepHandInputFocused}
-                onClick={() => adjustHands(-1)} className="size-6 shrink-0">
+                onClick={() => adjustHands(-1)} className="h-7 w-full min-w-0 shrink-0 @[26rem]:size-6">
                 −
               </Button>
               <Input
@@ -231,12 +231,12 @@ const PlayerRow = memo(function PlayerRow({
                 onChange={(event) => hands.change(event.target.value)}
                 onBlur={hands.blur(commitHands)}
                 onKeyDown={hands.keyDown}
-                className="h-8 w-8 shrink-0 border-transparent bg-transparent px-0 text-center font-bold @[30rem]:w-10"
+                className="order-first col-span-2 h-8 w-full min-w-0 border-transparent @[26rem]:order-none @[26rem]:w-8 bg-transparent px-0 text-center font-bold"
               />
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 增加一手`}
                 disabled={hands.pending}
                 onMouseDown={keepHandInputFocused}
-                onClick={() => adjustHands(1)} className="size-6 shrink-0">
+                onClick={() => adjustHands(1)} className="h-7 w-full min-w-0 shrink-0 @[26rem]:size-6">
                 +
               </Button>
             </div>
@@ -246,12 +246,12 @@ const PlayerRow = memo(function PlayerRow({
           <span className="block text-center font-semibold">{player.hands}</span>
         )}
       </td>
-      <td className="px-1.5 text-center">
-        <span className="inline-block max-w-full rounded bg-muted px-1 py-1.5 text-xs font-medium text-muted-foreground tabular-nums [overflow-wrap:anywhere] @[30rem]:px-2">
+      <td className="px-0.5 text-center">
+        <span className="inline-block max-w-full rounded bg-muted px-1 py-1.5 text-xs font-medium text-muted-foreground tabular-nums whitespace-nowrap @[30rem]:px-2">
           {toCellLabel(derivedBuyIn)}
         </span>
       </td>
-      <td className="px-1.5 text-center">
+      <td className="px-0.5 text-center">
         <Input
           type="text"
           inputMode="decimal"
@@ -268,13 +268,13 @@ const PlayerRow = memo(function PlayerRow({
           onChange={(event) => current.change(event.target.value)}
           onBlur={current.blur(commitCurrent)}
           onKeyDown={current.keyDown}
-          className="h-9 w-full border-transparent bg-muted/50 px-1.5 text-center font-semibold focus:border-primary focus:bg-card"
+          className="h-9 w-full border-transparent bg-muted/50 px-0.5 text-center font-semibold focus:border-primary focus:bg-card"
         />
         <CellStatus edit={current} onRetry={commitCurrent} />
       </td>
       <td
         className={cn(
-          "px-1.5 text-center text-sm font-bold tabular-nums [overflow-wrap:anywhere]",
+          "px-0.5 text-center text-xs @[26rem]:text-sm font-bold tabular-nums whitespace-nowrap",
           profitChips > 0 && "text-profit",
           profitChips < 0 && "text-loss",
           profitChips === 0 && "text-muted-foreground"
@@ -282,16 +282,18 @@ const PlayerRow = memo(function PlayerRow({
       >
         {profitDisplay}
       </td>
-      <td className="px-1 text-center">
-        <button
-          type="button"
-          aria-label={`删除 ${player.name}`}
-          onClick={(event) => onDelete(player, event.currentTarget)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-        >
-          ✕
-        </button>
-      </td>
+      {canEditHands && (
+        <td className="px-0 text-center">
+          <button
+            type="button"
+            aria-label={`删除 ${player.name}`}
+            onClick={(event) => onDelete(player, event.currentTarget)}
+            className="flex h-9 w-full items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
+            ✕
+          </button>
+        </td>
+      )}
     </tr>
   );
 }, arePlayerRowPropsEqual);

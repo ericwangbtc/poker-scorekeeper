@@ -34,7 +34,7 @@ test("describeHistoryEntry formats hands adjustment with value", () => {
   assert.equal(described.tone, "negative");
 });
 
-test("describeHistoryEntry formats player joined with current hands and +1", () => {
+test("describeHistoryEntry formats player joined without a hand adjustment", () => {
   const described = describeHistoryEntry(
     makeEntry({
       type: "player_joined",
@@ -44,12 +44,12 @@ test("describeHistoryEntry formats player joined with current hands and +1", () 
   );
 
   assert.equal(described.title, "eruu");
-  assert.equal(described.subtitle, "加入了房间（当前 2 手）");
-  assert.equal(described.value, "+1");
+  assert.equal(described.subtitle, "加入房间");
+  assert.equal(described.value, "");
   assert.equal(described.tone, "positive");
 });
 
-test("player chip history includes their hand and chip changes only", () => {
+test("player history includes their joining and hand changes only", () => {
   const entries = [
     makeEntry({ id: "hands", actorId: "p1", type: "hands_adjusted", handsDelta: 1 }),
     makeEntry({ id: "chips", actorId: "p1", type: "chips_changed" }),
@@ -59,7 +59,7 @@ test("player chip history includes their hand and chip changes only", () => {
 
   assert.deepEqual(filterPlayerChipHistory(entries, "p1").map(({ id }) => id), [
     "hands",
-    "chips",
+    "joined",
   ]);
 });
 
@@ -182,4 +182,25 @@ test("createPlayerJoinedHistoryEntry stores current hands total", () => {
   assert.equal(entry.actorId, "player_1");
   assert.equal(entry.actorName, "eee");
   assert.equal(entry.handsTotal, 1);
+});
+
+
+test("history separates joining from initial hands and hides remaining chip edits", () => {
+  const entries = [
+    makeEntry({ id: "joined", actorId: "p1", handsTotal: 1 }),
+    makeEntry({ id: "chips", type: "chips_changed", previousChips: 0, currentChips: 1500 }),
+  ];
+  const items = groupHistoryEntries(entries).flatMap((section) => section.items);
+  assert.equal(items.length, 2);
+  assert.equal(items[0].description.subtitle, "加入房间");
+  assert.equal(items[0].description.value, "");
+  assert.equal(items[1].description.subtitle, "增加手数（当前 1 手）");
+  assert.equal(items[1].description.value, "+1");
+  assert.notEqual(items[0].entry.id, items[1].entry.id);
+  assert.equal(items[0].entry.timestamp, items[1].entry.timestamp);
+  assert.equal(entries.length, 2);
+});
+
+test("history with only remaining chip edits is empty", () => {
+  assert.deepEqual(groupHistoryEntries([makeEntry({ type: "chips_changed" })]), []);
 });

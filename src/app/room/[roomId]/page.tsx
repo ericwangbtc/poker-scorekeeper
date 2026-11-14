@@ -109,7 +109,7 @@ export default function RoomPage() {
   );
 
   const handleDeletePlayer = async () => {
-    if (!roomId || !deleteTarget) return;
+    if (!roomId || !deleteTarget || !isHost) return;
     try {
       await sendRoomCommand(roomId, { type: "delete", playerId: deleteTarget.id });
       setDeleteTarget(null);
@@ -174,9 +174,10 @@ export default function RoomPage() {
   }, []);
 
   const openDeletePlayerDialog = useCallback((player: Player, trigger: HTMLButtonElement) => {
+    if (!isHost) return;
     dialogTrigger.current = trigger;
     setDeleteTarget(player);
-  }, []);
+  }, [isHost]);
 
   const handleCreateRoom = async () => {
     if (creatingRoom) return;
