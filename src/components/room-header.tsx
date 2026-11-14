@@ -91,8 +91,8 @@ export function RoomHeader({
             disabled={disabled}
             className={
               isHost
-                ? "ml-auto h-7 shrink-0 px-[0.75em] text-[1em]"
-                : "ml-auto h-7 shrink-0 px-[0.75em] text-[1em] gold-gradient text-primary-foreground"
+                ? "ml-auto h-7 shrink-0 px-[1.25em] text-[1em]"
+                : "ml-auto h-7 shrink-0 px-[1.25em] text-[1em] gold-gradient text-primary-foreground"
             }
           >
             {isHost ? "查看 PIN" : "PIN 认领"}
@@ -101,7 +101,7 @@ export function RoomHeader({
             size="sm"
             onClick={onCreateRoom}
             disabled={disabled}
-            className="h-7 shrink-0 px-[0.75em] text-[1em] gold-gradient text-primary-foreground"
+            className="h-7 shrink-0 px-[1.25em] text-[1em] gold-gradient text-primary-foreground"
           >
             新建房间
           </Button>
