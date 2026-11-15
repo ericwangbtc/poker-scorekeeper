@@ -68,11 +68,11 @@ export function PlayerTable({
       <div className="@container min-w-0 rounded-xl border border-border bg-card">
         <table className="w-full table-fixed text-xs @[26rem]:text-sm">
           <colgroup>
-            <col className={canEditHands ? "w-[24%]" : "w-[28%]"} />
-            <col className={canEditHands ? "w-[15%] @[26rem]:w-24" : "w-[10%]"} />
-            <col className={canEditHands ? "w-[15%]" : "w-[18%]"} />
-            <col className={canEditHands ? "w-[20%]" : "w-[22%]"} />
-            <col className={canEditHands ? "w-[19%]" : "w-[22%]"} />
+            <col className={canEditHands ? "w-[20%] @[26rem]:w-[24%]" : "w-[28%]"} />
+            <col className={canEditHands ? "w-[26%] @[26rem]:w-24" : "w-[10%]"} />
+            <col className={canEditHands ? "w-[14%] @[26rem]:w-[15%]" : "w-[18%]"} />
+            <col className={canEditHands ? "w-[18%] @[26rem]:w-[20%]" : "w-[22%]"} />
+            <col className={canEditHands ? "w-[15%] @[26rem]:w-[19%]" : "w-[22%]"} />
             {canEditHands && <col className="w-[7%]" />}
           </colgroup>
           <thead className="bg-muted text-[11px] font-medium uppercase text-muted-foreground">
@@ -215,11 +215,11 @@ const PlayerRow = memo(function PlayerRow({
       <td className="px-0.5">
         {canEditHands ? (
           <>
-            <div className="grid grid-cols-2 items-center justify-items-center gap-0.5 @[26rem]:flex @[26rem]:justify-center">
+            <div className="flex items-center justify-center gap-0.5">
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 减少一手`}
                 disabled={hands.pending}
                 onMouseDown={keepHandInputFocused}
-                onClick={() => adjustHands(-1)} className="h-7 w-full min-w-0 shrink-0 @[26rem]:size-6">
+                onClick={() => adjustHands(-1)} className="size-6 min-w-0 shrink-0">
                 −
               </Button>
               <Input
@@ -232,12 +232,12 @@ const PlayerRow = memo(function PlayerRow({
                 onChange={(event) => hands.change(event.target.value)}
                 onBlur={hands.blur(commitHands)}
                 onKeyDown={hands.keyDown}
-                className="order-first col-span-2 h-8 w-full min-w-0 border-transparent @[26rem]:order-none @[26rem]:w-8 bg-transparent px-0 text-center font-bold"
+                className="h-8 w-full min-w-0 border-transparent @[26rem]:w-8 bg-transparent px-0 text-center font-bold"
               />
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 增加一手`}
                 disabled={hands.pending}
                 onMouseDown={keepHandInputFocused}
-                onClick={() => adjustHands(1)} className="h-7 w-full min-w-0 shrink-0 @[26rem]:size-6">
+                onClick={() => adjustHands(1)} className="size-6 min-w-0 shrink-0">
                 +
               </Button>
             </div>
