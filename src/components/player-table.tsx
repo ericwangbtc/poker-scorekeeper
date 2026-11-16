@@ -65,7 +65,7 @@ export function PlayerTable({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="@container min-w-0 rounded-xl border border-border bg-card">
+      <div className="@container min-w-0 overflow-hidden rounded-xl border border-border bg-card">
         <table className="w-full table-fixed text-xs @[26rem]:text-sm">
           <colgroup>
             <col className={canEditHands ? "w-[20%] @[26rem]:w-[24%]" : "w-[28%]"} />
@@ -215,7 +215,7 @@ const PlayerRow = memo(function PlayerRow({
       <td className="px-0.5">
         {canEditHands ? (
           <>
-            <div className="flex items-center justify-center gap-0.5">
+            <div className="flex items-center justify-center gap-0">
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 减少一手`}
                 disabled={hands.pending}
                 onMouseDown={keepHandInputFocused}
@@ -232,7 +232,7 @@ const PlayerRow = memo(function PlayerRow({
                 onChange={(event) => hands.change(event.target.value)}
                 onBlur={hands.blur(commitHands)}
                 onKeyDown={hands.keyDown}
-                className="h-8 w-full min-w-0 border-transparent @[26rem]:w-8 bg-transparent px-0 text-center font-bold"
+                className="h-8 w-6 min-w-0 border-transparent bg-transparent px-0 text-center text-sm font-bold md:text-xs"
               />
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 增加一手`}
                 disabled={hands.pending}
