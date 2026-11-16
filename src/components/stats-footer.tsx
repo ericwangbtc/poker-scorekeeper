@@ -27,8 +27,8 @@ export function StatsFooter({
     : `${totals.delta > 0 ? "多出" : "缺少"} ${difference} 筹码`;
 
   return (
-    <footer className="z-20 shrink-0 border-t border-border bg-elevated safe-area-bottom">
-      <div className="grid grid-cols-[1fr_1fr_1.4fr] items-stretch gap-2 px-3 py-2">
+    <footer className="z-20 shrink-0 border-t border-border/60 bg-elevated safe-area-bottom">
+      <div className="grid grid-cols-[1fr_1fr_1.4fr] items-stretch gap-0 divide-x divide-border/60 px-3 py-3">
         <StatCell label="总买入" value={totalBuyInLabel} />
         <StatCell label="总剩余" value={totalCurrentLabel} />
         <StatCell
@@ -49,11 +49,11 @@ interface StatCellProps {
 
 function StatCell({ label, value, className }: StatCellProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 px-1 py-1.5 text-center">
-      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+    <div className="flex flex-col items-center justify-center gap-1 px-1 py-0.5 text-center">
+      <span className="text-[10px] tracking-wide text-muted-foreground">
         {label}
       </span>
-      <span className={cn("text-sm font-semibold text-foreground [overflow-wrap:anywhere] min-w-0 max-w-full", className)}>
+      <span className={cn("text-sm font-semibold tabular-nums text-foreground [overflow-wrap:anywhere] min-w-0 max-w-full", className)}>
         {value}
       </span>
     </div>

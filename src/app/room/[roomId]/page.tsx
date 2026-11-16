@@ -213,11 +213,6 @@ export default function RoomPage() {
     }
   };
 
-  const hintMessage = useMemo(() => {
-    if (!room) return null;
-    return `每手 ${room.config.chipsPerHand} 筹码`;
-  }, [room]);
-
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-background">
@@ -242,7 +237,7 @@ export default function RoomPage() {
     <div className="flex h-dvh flex-col overflow-hidden bg-background" style={{ height: viewportHeight }}>
       <RoomHeader
         roomId={roomId}
-        hintMessage={hintMessage}
+        chipsPerHand={room.config.chipsPerHand}
         onInvite={openFrom(setQrOpen)}
         onSettings={openFrom(setSettingsOpen)}
         onHistory={(event) => {

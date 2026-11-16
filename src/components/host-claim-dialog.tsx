@@ -38,6 +38,7 @@ export function HostClaimDialog({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (submitting || !/^\d{4}$/.test(pin)) return;
     await onSubmit(pin);
   };
 
@@ -53,10 +54,13 @@ export function HostClaimDialog({
         <form className="mt-2 flex flex-col gap-4" onSubmit={handleSubmit}>
           <Input
             inputMode="numeric"
-            pattern="\d*"
-            placeholder="输入 6 位 PIN"
+            pattern="[0-9]{4}"
+            maxLength={4}
+            required
+            aria-label="4 位房主 PIN"
+            placeholder="输入 4 位 PIN"
             value={pin}
-            onChange={(event) => setPin(event.target.value)}
+            onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
             className="text-center tracking-[0.3em]"
             autoFocus
           />
@@ -71,7 +75,7 @@ export function HostClaimDialog({
             </Button>
             <Button
               type="submit"
-              disabled={submitting || pin.trim().length === 0}
+              disabled={submitting || !/^\d{4}$/.test(pin)}
               className="gold-gradient text-primary-foreground"
             >
               {submitting ? "认领中..." : "确认认领"}

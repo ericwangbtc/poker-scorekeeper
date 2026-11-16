@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const name = z.string().trim().min(1).max(120);
 const playerId = z.string().regex(/^player_[a-z0-9]+$/);
-const pin = z.string().regex(/^\d{6}$/);
+const pin = z.string().regex(/^\d{4}$/);
 export const clientIdSchema = z.string().regex(/^client_[a-f0-9]{32}$/);
 
 export const commandSchema = z.discriminatedUnion("type", [

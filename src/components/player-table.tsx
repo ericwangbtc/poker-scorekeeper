@@ -75,7 +75,7 @@ export function PlayerTable({
             <col className={canEditHands ? "w-[15%] @[26rem]:w-[19%]" : "w-[22%]"} />
             {canEditHands && <col className="w-[7%]" />}
           </colgroup>
-          <thead className="bg-muted text-[11px] font-medium uppercase text-muted-foreground">
+          <thead className="bg-muted/60 text-[11px] font-medium text-muted-foreground">
             <tr>
               <th className="h-8 px-1 text-center">玩家</th>
               <th className="h-8 px-1 text-center">手数</th>
@@ -118,7 +118,7 @@ export function PlayerTable({
 
       <Button
         onClick={onAddPlayer}
-        className="h-11 w-full gold-gradient font-semibold text-primary-foreground"
+        className="h-11 w-full rounded-lg gold-gradient font-semibold text-primary-foreground"
       >
         + 添加玩家
       </Button>
@@ -199,7 +199,7 @@ const PlayerRow = memo(function PlayerRow({
     : `${profitChips >= 0 ? "+" : "-"}${stripTrailingZeros(Math.abs(profitChips))}`;
 
   return (
-    <tr className="h-[44px] border-b border-border/50 last:border-0 even:bg-muted/30 hover:bg-subtle/50 focus-within:bg-primary/5">
+    <tr className="h-12 border-b border-border/40 last:border-0 even:bg-muted/10 hover:bg-subtle/40 focus-within:bg-primary/5">
       <td className="px-0.5 text-center">
         <button
           type="button"
@@ -207,7 +207,7 @@ const PlayerRow = memo(function PlayerRow({
           title={player.name}
           aria-label={`查看 ${player.name} 的筹码变更记录`}
           aria-haspopup="dialog"
-          className="min-h-9 w-full cursor-pointer truncate rounded-md px-1 py-1 text-center text-[15px] @[26rem]:text-[17px] font-medium underline decoration-muted-foreground/50 underline-offset-4 hover:bg-muted hover:decoration-current focus-visible:outline-2 focus-visible:outline-primary"
+          className="min-h-9 w-full cursor-pointer truncate rounded-md px-1 py-1 text-center text-sm @[26rem]:text-[15px] font-medium underline decoration-muted-foreground/20 underline-offset-4 hover:bg-muted hover:decoration-muted-foreground/60 focus-visible:outline-2 focus-visible:outline-primary"
         >
           {player.name}
         </button>
@@ -219,7 +219,7 @@ const PlayerRow = memo(function PlayerRow({
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 减少一手`}
                 disabled={hands.pending}
                 onMouseDown={keepHandInputFocused}
-                onClick={() => adjustHands(-1)} className="size-6 min-w-0 shrink-0">
+                onClick={() => adjustHands(-1)} className="h-10 w-6 min-w-0 shrink-0 rounded-md border-transparent bg-transparent text-muted-foreground shadow-none hover:bg-primary/10 hover:text-primary active:bg-primary/20">
                 −
               </Button>
               <Input
@@ -232,12 +232,12 @@ const PlayerRow = memo(function PlayerRow({
                 onChange={(event) => hands.change(event.target.value)}
                 onBlur={hands.blur(commitHands)}
                 onKeyDown={hands.keyDown}
-                className="h-8 w-6 min-w-0 border-transparent bg-transparent px-0 text-center text-sm font-bold md:text-xs"
+                className="h-8 w-6 min-w-0 border-transparent bg-transparent px-0 text-center text-sm font-medium md:text-xs"
               />
               <Button variant="outline" size="icon" aria-label={`给 ${player.name} 增加一手`}
                 disabled={hands.pending}
                 onMouseDown={keepHandInputFocused}
-                onClick={() => adjustHands(1)} className="size-6 min-w-0 shrink-0">
+                onClick={() => adjustHands(1)} className="h-10 w-6 min-w-0 shrink-0 rounded-md border-transparent bg-transparent text-muted-foreground shadow-none hover:bg-primary/10 hover:text-primary active:bg-primary/20">
                 +
               </Button>
             </div>
@@ -248,7 +248,7 @@ const PlayerRow = memo(function PlayerRow({
         )}
       </td>
       <td className="px-0.5 text-center">
-        <span className="inline-block max-w-full rounded bg-muted px-1 py-1.5 text-xs font-medium text-muted-foreground tabular-nums whitespace-nowrap @[30rem]:px-2">
+        <span className="inline-block max-w-full px-0.5 py-1.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap">
           {toCellLabel(derivedBuyIn)}
         </span>
       </td>
@@ -269,13 +269,13 @@ const PlayerRow = memo(function PlayerRow({
           onChange={(event) => current.change(event.target.value)}
           onBlur={current.blur(commitCurrent)}
           onKeyDown={current.keyDown}
-          className="h-9 w-full border-transparent bg-muted/50 px-0.5 text-center text-[13px] font-medium focus:border-primary focus:bg-card focus:text-base md:focus:text-[13px]"
+          className="h-9 w-full rounded-lg border-border/40 bg-muted/30 px-0.5 text-center text-[13px] font-medium focus:border-primary focus:bg-card focus:text-base md:focus:text-[13px]"
         />
         <CellStatus edit={current} onRetry={commitCurrent} />
       </td>
       <td
         className={cn(
-          "px-0.5 text-center text-xs @[26rem]:text-sm font-bold tabular-nums whitespace-nowrap",
+          "px-0.5 text-center text-[13px] @[26rem]:text-[15px] font-semibold tabular-nums whitespace-nowrap",
           profitChips > 0 && "text-profit",
           profitChips < 0 && "text-loss",
           profitChips === 0 && "text-muted-foreground"
@@ -289,7 +289,7 @@ const PlayerRow = memo(function PlayerRow({
             type="button"
             aria-label={`删除 ${player.name}`}
             onClick={(event) => onDelete(player, event.currentTarget)}
-            className="flex h-9 w-full items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            className="flex h-9 w-full items-center justify-center rounded-md text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors"
           >
             ✕
           </button>

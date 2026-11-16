@@ -8,7 +8,7 @@ export const generateClientId = () => {
 
 export const generateHostPin = (
   random = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32
-) => Math.floor(random() * 900_000 + 100_000).toString();
+) => Math.floor(random() * 9_000 + 1_000).toString();
 
 export const normalizeHostPin = (value: string) => value.replace(/\D/g, "");
 

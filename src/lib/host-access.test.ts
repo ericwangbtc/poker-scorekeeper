@@ -12,11 +12,12 @@ test("generateClientId prefixes with client_", () => {
   assert.match(clientId, /^client_[a-f0-9]{32}$/);
 });
 
-test("generateHostPin always returns 6 digits", () => {
+test("generateHostPin returns 4 digits at both range boundaries", () => {
   const pin = generateHostPin(() => 0);
 
-  assert.equal(pin, "100000");
-  assert.equal(pin.length, 6);
+  assert.equal(pin, "1000");
+  assert.equal(pin.length, 4);
+  assert.equal(generateHostPin(() => 1 - Number.EPSILON), "9999");
 });
 
 test("normalizeHostPin strips all non-digits", () => {
