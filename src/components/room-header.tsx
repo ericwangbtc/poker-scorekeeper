@@ -32,14 +32,15 @@ export function RoomHeader({
 }: RoomHeaderProps) {
   return (
     <header className="@container sticky top-0 z-20 w-full shrink-0 border-b border-border/50 bg-background px-2 py-2.5 sm:px-3">
-      <div className="flex min-w-0 flex-nowrap items-center gap-[clamp(2px,1cqw,8px)] whitespace-nowrap text-[clamp(10px,2.8cqw,12px)]">
+      <div className="flex min-w-0 flex-nowrap items-center gap-[clamp(2px,0.7cqw,6px)] whitespace-nowrap text-[clamp(10px,2.8cqw,12px)]">
         <Badge
           variant="outline"
-          className="hidden shrink-0 border-primary/25 bg-primary/10 px-2 py-1 text-[1em] font-semibold tracking-wide text-primary @[40rem]:inline-flex"
+          title={`房间号 ${roomId}`}
+          className="hidden shrink-0 rounded-md border-primary/25 bg-primary/10 px-1.5 py-1 text-[0.9em] font-semibold text-primary @[24rem]:inline-flex"
         >
           {roomId}
         </Badge>
-        <div className="flex min-w-0 items-center gap-[0.65em]">
+        <div className="flex min-w-0 items-center gap-[0.45em]">
           <p
             title={`每手 ${chipsPerHand} 筹码`}
             className="flex min-w-0 items-baseline gap-[0.35em]"
@@ -65,10 +66,10 @@ export function RoomHeader({
             aria-label="邀请玩家"
             title="邀请玩家"
             disabled={disabled}
-            className="h-9 w-[clamp(28px,8cqw,36px)] gap-1 rounded-md text-primary @[28rem]:w-auto @[28rem]:px-2"
+            className="h-9 w-[clamp(28px,8cqw,36px)] gap-1 rounded-md text-primary @[22rem]:w-auto @[22rem]:px-2"
           >
             <Share2 aria-hidden="true" className="size-4" />
-            <span className="hidden text-[1em] @[28rem]:inline">邀请</span>
+            <span className="hidden text-[1em] @[22rem]:inline">邀请</span>
           </Button>
           <Button
             variant="ghost"
@@ -109,7 +110,7 @@ export function RoomHeader({
             disabled={disabled}
             className="h-9 gap-0 rounded-md border-primary/35 bg-primary/10 px-[0.75em] text-[1em] font-semibold text-primary hover:border-primary/60 hover:bg-primary/20 hover:text-primary active:bg-primary/30"
           >
-            新建<span className="hidden @[28rem]:inline">房间</span>
+            新建<span className="hidden @[22rem]:inline">房间</span>
           </Button>
         </div>
       </div>
