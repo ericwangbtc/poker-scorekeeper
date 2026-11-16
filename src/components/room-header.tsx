@@ -1,12 +1,10 @@
 "use client";
 
 import type { MouseEventHandler } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { History, Settings, Share2 } from "lucide-react";
 
 interface RoomHeaderProps {
-  roomId: string;
   chipsPerHand: number;
   onInvite: MouseEventHandler<HTMLButtonElement>;
   onSettings: MouseEventHandler<HTMLButtonElement>;
@@ -19,7 +17,6 @@ interface RoomHeaderProps {
 }
 
 export function RoomHeader({
-  roomId,
   chipsPerHand,
   onInvite,
   onSettings,
@@ -33,13 +30,6 @@ export function RoomHeader({
   return (
     <header className="@container sticky top-0 z-20 w-full shrink-0 border-b border-border/50 bg-background px-2 py-2.5 sm:px-3">
       <div className="flex min-w-0 flex-nowrap items-center gap-[clamp(2px,0.7cqw,6px)] whitespace-nowrap text-[clamp(10px,2.8cqw,12px)]">
-        <Badge
-          variant="outline"
-          title={`房间号 ${roomId}`}
-          className="hidden shrink-0 rounded-md border-primary/25 bg-primary/10 px-1.5 py-1 text-[0.9em] font-semibold text-primary @[24rem]:inline-flex"
-        >
-          {roomId}
-        </Badge>
         <div className="flex min-w-0 items-center gap-[0.45em]">
           <p
             title={`每手 ${chipsPerHand} 筹码`}
