@@ -121,7 +121,7 @@ export function SettingsSheet({
             <Button
               type="submit"
               disabled={saving || !isValid}
-              className="gold-gradient text-primary-foreground"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {saving ? "保存中..." : "保存"}
             </Button>

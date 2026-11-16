@@ -8,7 +8,7 @@ export const SHEET_FOOTER_CLASS =
   "mt-auto flex flex-col gap-3 p-4 sm:flex-row sm:justify-end sm:[&>button]:min-w-24 [&>button]:h-11 [&>button]:min-h-11 [&>button]:flex-1 sm:[&>button]:flex-none";
 
 export const HISTORY_GROUP_HEADER_CLASS =
-  "sticky top-0 z-10 -mx-1 mb-2 px-3 py-1 text-[11px] font-medium text-muted-foreground/80 bg-elevated/95 backdrop-blur-xl";
+  "sticky top-0 z-10 -mx-4 border-b border-border px-5 py-2.5 text-xs font-semibold text-foreground/85 bg-elevated";
 
 export const HISTORY_TIME_LABEL_CLASS =
-  "text-xs text-muted-foreground/80 tabular-nums";
+  "shrink-0 text-xs leading-snug text-muted-foreground tabular-nums";

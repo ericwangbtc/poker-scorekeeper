@@ -29,12 +29,6 @@ interface HistorySheetProps {
   player: Player | null;
 }
 
-const toneClass = (tone: HistoryTone) => {
-  if (tone === "positive") return "bg-profit";
-  if (tone === "negative") return "bg-loss";
-  return "bg-muted-foreground";
-};
-
 const valueClass = (tone: HistoryTone) => {
   if (tone === "positive") return "text-profit";
   if (tone === "negative") return "text-loss";
@@ -45,31 +39,26 @@ const HistoryRow = memo(function HistoryRow({ item }: { item: GroupedHistoryItem
   const { description } = item;
 
   return (
-    <li key={item.entry.id} className="relative pb-6 pl-6 last:pb-0">
-      <span
-        className={cn(
-          "absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-background ring-4 ring-background",
-          toneClass(description.tone)
-        )}
-      />
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="truncate text-sm font-semibold text-foreground">
-            {description.title}
-          </span>
-          <span className="text-xs text-muted-foreground">{description.subtitle}</span>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-0.5">
-          {description.value ? (
-            <span className={cn("font-mono text-sm font-bold", valueClass(description.tone))}>
-              {description.value}
-            </span>
-          ) : null}
-          <span className={HISTORY_TIME_LABEL_CLASS}>
-            {item.relativeLabel} · {item.timeLabel}
-          </span>
-        </div>
-      </div>
+    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-1.5 border-b border-border/60 py-4 last:border-b-0">
+      <span className="min-w-0 break-words text-[15px] font-semibold leading-snug text-foreground">
+        {description.title}
+      </span>
+      <time
+        dateTime={new Date(item.entry.timestamp).toISOString()}
+        title={`${item.relativeLabel} · ${item.timeLabel}`}
+        className={HISTORY_TIME_LABEL_CLASS}
+      >
+        {item.timeLabel}
+      </time>
+      <span className="min-w-0 text-sm leading-relaxed text-foreground/80">
+        {description.subtitle}
+      </span>
+      {description.value ? (
+        <span className={cn("whitespace-nowrap text-base font-semibold tabular-nums", valueClass(description.tone))}>
+          {description.value}
+          {item.entry.type === "hands_adjusted" && <span className="ml-1 text-xs font-normal text-muted-foreground">手</span>}
+        </span>
+      ) : null}
     </li>
   );
 });
@@ -120,7 +109,7 @@ export function HistorySheet({
                   <div className={HISTORY_GROUP_HEADER_CLASS}>
                     {section.label}
                   </div>
-                  <ul className="relative ml-2 space-y-0 border-l border-border/50">
+                  <ul className="px-1">
                     {section.items.map((item) => (
                       <HistoryRow key={item.entry.id} item={item} />
                     ))}

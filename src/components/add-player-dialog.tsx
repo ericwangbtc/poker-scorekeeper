@@ -98,7 +98,7 @@ export function AddPlayerDialog({
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || name.trim().length === 0}
-            className="gold-gradient text-primary-foreground"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {isSubmitting ? "添加中..." : "确认添加"}
           </Button>

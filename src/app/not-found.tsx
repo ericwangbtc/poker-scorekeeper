@@ -13,7 +13,7 @@ export default function NotFound() {
           该房间可能已过期或从未创建过。
         </p>
         <Link href="/">
-          <Button className="gold-gradient text-primary-foreground">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
             返回首页
           </Button>
         </Link>

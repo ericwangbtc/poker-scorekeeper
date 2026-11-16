@@ -45,7 +45,7 @@ export function CreateRoomDialog({
               void onConfirm();
             }}
             disabled={isLoading}
-            className="gold-gradient text-primary-foreground"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {isLoading ? "创建中..." : "确认创建"}
           </AlertDialogAction>

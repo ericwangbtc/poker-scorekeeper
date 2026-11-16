@@ -83,7 +83,7 @@ export default function HomePage() {
               <Button
                 type="submit"
                 disabled={isCreating}
-                className="h-12 w-full gold-gradient font-semibold text-primary-foreground"
+                className="h-12 w-full bg-primary hover:bg-primary/90 font-semibold text-primary-foreground"
               >
                 {isCreating ? "创建中..." : "创建新局"}
               </Button>

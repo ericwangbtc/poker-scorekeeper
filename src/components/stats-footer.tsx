@@ -23,7 +23,7 @@ export function StatsFooter({
   const totalCurrentLabel = stripTrailingZeros(totals.totalCurrent);
   const difference = stripTrailingZeros(Math.abs(totals.delta));
   const statusText = totals.isBalanced
-    ? "✓ 账目平衡"
+    ? "已平衡"
     : `${totals.delta > 0 ? "多出" : "缺少"} ${difference} 筹码`;
 
   return (
@@ -32,7 +32,7 @@ export function StatsFooter({
         <StatCell label="总买入" value={totalBuyInLabel} />
         <StatCell label="总剩余" value={totalCurrentLabel} />
         <StatCell
-          label="对账"
+          label="差额"
           value={statusText}
           className={totals.isBalanced ? "text-profit" : "text-loss"}
         />
@@ -49,8 +49,8 @@ interface StatCellProps {
 
 function StatCell({ label, value, className }: StatCellProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1 px-1 py-0.5 text-center">
-      <span className="text-[10px] tracking-wide text-muted-foreground">
+    <div className="flex flex-col items-center justify-center gap-1 px-3 py-0.5 text-center">
+      <span className="text-[11px] text-muted-foreground">
         {label}
       </span>
       <span className={cn("text-sm font-semibold tabular-nums text-foreground [overflow-wrap:anywhere] min-w-0 max-w-full", className)}>

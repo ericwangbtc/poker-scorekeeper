@@ -76,7 +76,7 @@ export function HostClaimDialog({
             <Button
               type="submit"
               disabled={submitting || !/^\d{4}$/.test(pin)}
-              className="gold-gradient text-primary-foreground"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {submitting ? "认领中..." : "确认认领"}
             </Button>
